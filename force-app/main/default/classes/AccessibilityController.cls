@@ -8,3 +8,4 @@ public with sharing class AccessibilityController {
         return out;
     }
 }
+ 

@@ -35,4 +35,4 @@ on:
   push:
     branches: [ main ] 
     paths:
-      - 'force-app/**'
+      - 'force-app/**' 
