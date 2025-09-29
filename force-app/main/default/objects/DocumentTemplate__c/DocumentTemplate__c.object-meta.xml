@@ -12,7 +12,7 @@
     <fullName>Template_Content__c</fullName>
     <label>Template Content</label>
     <type>LongTextArea</type>
-    <length>32768</length>
+    <length>32768</length> 
   </fields>
   <fields>
     <fullName>Region__c</fullName>

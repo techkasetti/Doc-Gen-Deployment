@@ -11,7 +11,7 @@
                 @bottom-center {
                     content: "Page " counter(page) " of " counter(pages);
                 }
-            }
+            } 
             
             body {
                 font-family: Arial, sans-serif;

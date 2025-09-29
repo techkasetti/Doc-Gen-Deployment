@@ -11,7 +11,7 @@
   <fields>
     <fullName>Document__c</fullName>
     <label>Document</label>
-    <type>Lookup</type>
+    <type>Lookup</type> 
     <referenceTo>Document__c</referenceTo>
   </fields>
   <fields>

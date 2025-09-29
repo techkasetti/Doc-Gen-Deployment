@@ -12,7 +12,7 @@
             <value>
                 <fullName>PDF</fullName>
                 <default>false</default>
-                <label>PDF</label>
+                <label>PDF</label> 
             </value>
             <value>
                 <fullName>DOCX</fullName>

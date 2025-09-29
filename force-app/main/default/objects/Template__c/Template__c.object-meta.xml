@@ -9,7 +9,7 @@
   <deploymentStatus>Deployed</deploymentStatus>
   <sharingModel>ReadWrite</sharingModel>
 
-  <!-- Core fields -->
+  <!-- Core fields --> 
   <fields>
     <fullName>Content__c</fullName>
     <label>Content</label>

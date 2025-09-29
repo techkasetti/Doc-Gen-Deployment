@@ -12,7 +12,7 @@
     <actionOverrides>
         <actionName>Accept</actionName>
         <formFactor>Small</formFactor>
-        <type>Default</type>
+        <type>Default</type> 
     </actionOverrides>
     <actionOverrides>
         <actionName>CancelEdit</actionName>
