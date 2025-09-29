@@ -1,0 +1,225 @@
+<apex:page controller="ComplianceReportController" renderAs="pdf" 
+           standardStylesheets="false" showHeader="false">
+    
+    <html>
+    <head>
+        <style>
+            @page {
+                size: A4 portrait;
+                margin: 0.75in;
+                @top-center {
+                    content: "Document Compliance Report";
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #0070d2;
+                }
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                    font-size: 10px;
+                }
+            }
+            
+            body {
+                font-family: 'Times New Roman', serif;
+                font-size: 11px;
+                line-height: 1.5;
+                color: #333;
+            }
+            
+            .report-header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding: 20px;
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+            }
+            
+            .report-title {
+                font-size: 24px;
+                font-weight: bold;
+                color: #0070d2;
+                margin-bottom: 10px;
+            }
+            
+            .report-meta {
+                font-size: 12px;
+                color: #666;
+            }
+            
+            .section {
+                margin-bottom: 25px;
+                page-break-inside: avoid;
+            }
+            
+            .section-title {
+                font-size: 16px;
+                font-weight: bold;
+                color: #0070d2;
+                border-bottom: 2px solid #0070d2;
+                padding-bottom: 5px;
+                margin-bottom: 15px;
+            }
+            
+            .compliance-summary {
+                display: flex;
+                justify-content: space-around;
+                margin: 20px 0;
+            }
+            
+            .compliance-card {
+                text-align: center;
+                padding: 15px;
+                border: 2px solid;
+                border-radius: 8px;
+                min-width: 120px;
+            }
+            
+            .compliant-card {
+                border-color: #28a745;
+                background-color: #d4edda;
+            }
+            
+            .non-compliant-card {
+                border-color: #dc3545;
+                background-color: #f8d7da;
+            }
+            
+            .score-display {
+                font-size: 32px;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+            
+            .compliant-score {
+                color: #28a745;
+            }
+            
+            .non-compliant-score {
+                color: #dc3545;
+            }
+            
+            .warning-score {
+                color: #ffc107;
+            }
+            
+            .violation-list {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 10px 0;
+            }
+            
+            .violation-item {
+                margin: 5px 0;
+                padding-left: 15px;
+                position: relative;
+            }
+            
+            .violation-item:before {
+                content: "⚠";
+                position: absolute;
+                left: 0;
+                color: #f39c12;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+            }
+            
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="report-header">
+            <div class="report-title">Document Compliance Analysis Report</div>
+            <div class="report-meta">
+                Document ID: {!documentId}<br/>
+                Analysis Date: {!analysisDate}<br/>
+                Report Generated: {!NOW()}
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Executive Summary</div>
+            <div class="compliance-summary">
+                <div class="compliance-card {!IF(overallCompliant, 'compliant-card', 'non-compliant-card')}">
+                    <div>Overall Compliance</div>
+                    <div class="score-display {!IF(complianceScore >= 80, 'compliant-score', IF(complianceScore >= 60, 'warning-score', 'non-compliant-score'))}">
+                        {!ROUND(complianceScore, 0)}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Regulatory Compliance Status</div>
+            <table>
+                <tr>
+                    <th>Regulation</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Last Checked</th>
+                </tr>
+                <tr>
+                    <td>GDPR (General Data Protection Regulation)</td>
+                    <td style="color: {!IF(gdprCompliant, '#28a745', '#dc3545')};">
+                        {!IF(gdprCompliant, '✓ Compliant', '✗ Non-Compliant')}
+                    </td>
+                    <td>{!gdprScore}%</td>
+                    <td>{!analysisDate}</td>
+                </tr>
+                <tr>
+                    <td>HIPAA (Health Insurance Portability)</td>
+                    <td style="color: {!IF(hipaaCompliant, '#28a745', '#dc3545')};">
+                        {!IF(hipaaCompliant, '✓ Compliant', '✗ Non-Compliant')}
+                    </td>
+                    <td>{!hipaaScore}%</td>
+                    <td>{!analysisDate}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <apex:outputPanel rendered="{!violationCount > 0}">
+            <div class="section">
+                <div class="section-title">Compliance Violations ({!violationCount})</div>
+                <div class="violation-list">
+                    <apex:repeat value="{!violations}" var="violation">
+                        <div class="violation-item">{!violation}</div>
+                    </apex:repeat>
+                </div>
+            </div>
+        </apex:outputPanel>
+        
+        <div class="section">
+            <div class="section-title">Recommendations</div>
+            <apex:repeat value="{!recommendations}" var="recommendation">
+                <p>• {!recommendation}</p>
+            </apex:repeat>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Document Metadata</div>
+            <table>
+                <tr><td><strong>Document Title:</strong></td><td>{!documentTitle}</td></tr>
+                <tr><td><strong>File Size:</strong></td><td>{!documentSize} bytes</td></tr>
+                <tr><td><strong>Created Date:</strong></td><td>{!createdDate}</td></tr>
+                <tr><td><strong>Last Modified:</strong></td><td>{!lastModifiedDate}</td></tr>
+                <tr><td><strong>Analysis Engine:</strong></td><td>Anara AI Compliance Engine v1.0</td></tr>
+            </table>
+        </div>
+    </body>
+    </html>
+</apex:page>

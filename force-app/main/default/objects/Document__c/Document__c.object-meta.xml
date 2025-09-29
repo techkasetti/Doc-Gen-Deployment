@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+  <label>Document</label>
+  <pluralLabel>Documents</pluralLabel>
+  <nameField>
+    <type>AutoNumber</type>
+    <label>Document Number</label>
+    <displayFormat>DOC-{000000}</displayFormat>
+  </nameField>
+  <deploymentStatus>Deployed</deploymentStatus>
+  <sharingModel>ReadWrite</sharingModel>
+
+  <fields>
+    <fullName>Template__c</fullName>
+    <label>Template</label>
+    <type>Lookup</type>
+    <referenceTo>Template__c</referenceTo>
+  </fields>
+
+  <fields>
+    <fullName>ContentUrl__c</fullName>
+    <label>Content URL</label>
+    <type>Url</type>
+  </fields>
+
+  <fields>
+    <fullName>Hash__c</fullName>
+    <label>SHA256 Hash</label>
+    <type>Text</type>
+    <length>128</length>
+  </fields>
+
+  <fields>
+    <fullName>Status__c</fullName>
+    <label>Status</label>
+    <type>Picklist</type>
+    <valueSet>
+      <valueSetDefinition>
+        <value><fullName>Draft</fullName></value>
+        <value><fullName>Generated</fullName></value>
+        <value><fullName>SignatureRequested</fullName></value>
+        <value><fullName>Signed</fullName></value>
+        <value><fullName>Archived</fullName></value>
+      </valueSetDefinition>
+    </valueSet>
+  </fields>
+
+  <fields>
+    <fullName>RetentionPolicy__c</fullName>
+    <label>Retention Policy</label>
+    <type>Lookup</type>
+    <referenceTo>RetentionPolicy__c</referenceTo>
+  </fields>
+
+</CustomObject>

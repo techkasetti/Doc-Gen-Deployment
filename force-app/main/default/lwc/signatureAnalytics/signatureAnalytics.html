@@ -1,0 +1,171 @@
+<template>
+    <lightning-card title="E-Signature Analytics Dashboard" icon-name="standard:dashboard">
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="slds-text-align_center slds-p-around_medium">
+                <lightning-spinner 
+                    alternative-text="Loading analytics..." 
+                    size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error Message -->
+        <template if:true={error}>
+            <div class="slds-notify slds-notify_alert slds-alert_error">
+                <span class="slds-icon_container slds-icon-utility-error">
+                    <lightning-icon 
+                        icon-name="utility:error" 
+                        size="x-small" 
+                        variant="inverse">
+                    </lightning-icon>
+                </span> 
+                <h2>{error}</h2>
+            </div>
+        </template>
+
+        <!-- Analytics Content -->
+        <template if:true={showAnalytics}>
+            <div class="analytics-container">
+
+                <!-- Key Metrics Row -->
+                <div class="slds-grid slds-gutters slds-wrap metrics-section">
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="metric-card slds-box slds-text-align_center">
+                            <div class="metric-value">{analyticsData.totalRequests}</div>
+                            <div class="metric-label">Total Requests</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="metric-card slds-box slds-text-align_center">
+                            <div class="metric-value">{formattedCompletionRate}%</div>
+                            <div class="metric-label">Completion Rate</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="metric-card slds-box slds-text-align_center">
+                            <div class="metric-value">{formattedAvgTime}h</div>
+                            <div class="metric-label">Avg Completion Time</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="metric-card slds-box slds-text-align_center">
+                            <div class="metric-value">{analyticsData.activeUsers}</div>
+                            <div class="metric-label">Active Users</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="slds-grid slds-gutters slds-wrap charts-section">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-card title="Status Distribution" icon-name="standard:custom_tab">
+                            <div class="chart-container">
+                                <canvas lwc:ref="statusChart" width="400" height="300"></canvas>
+                            </div>
+                        </lightning-card>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-card title="Completion Trends" icon-name="standard:trending">
+                            <div class="chart-container">
+                                <canvas lwc:ref="trendChart" width="400" height="300"></canvas>
+                            </div>
+                        </lightning-card>
+                    </div>
+                </div>
+
+                <!-- System Health Section -->
+                <div class="slds-grid slds-gutters system-health-section">
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning-card title="System Health" icon-name="standard:service_report">
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-4">
+                                    <div class="health-metric">
+                                        <div class="health-label">System Status</div>
+                                        <div class={systemStatusClass}>{analyticsData.systemStatus}</div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-4">
+                                    <div class="health-metric">
+                                        <div class="health-label">Uptime</div>
+                                        <div class="health-value">{formattedUptime}%</div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-4">
+                                    <div class="health-metric">
+                                        <div class="health-label">Performance Score</div>
+                                        <div class="health-value">{formattedPerformanceScore}</div>
+                                    </div>
+                                </div>
+                                <div class="slds-col slds-size_1-of-4">
+                                    <div class="health-metric">
+                                        <div class="health-label">Last Updated</div>
+                                        <div class="health-timestamp">{lastUpdated}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </lightning-card>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div class="slds-grid slds-gutters activity-section">
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning-card title="Recent Activity" icon-name="standard:news">
+                            <div class="activity-list">
+                                <template for:each={recentActivities} for:item="activity">
+                                    <div key={activity.id} class="activity-item slds-p-around_small">
+                                        <div class="slds-grid">
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <strong>{activity.documentTitle}</strong>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-3">
+                                                {activity.signerName} - {activity.action}
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                                                <lightning-formatted-date-time 
+                                                    value={activity.activityDate}
+                                                    year="numeric" 
+                                                    month="short" 
+                                                    day="2-digit"
+                                                    hour="2-digit" 
+                                                    minute="2-digit">
+                                                </lightning-formatted-date-time>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </lightning-card>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="slds-grid slds-gutters action-section">
+                    <div class="slds-col slds-size_1-of-1 slds-text-align_center">
+                        <lightning-button 
+                            label="Refresh Data" 
+                            onclick={refreshAnalytics} 
+                            variant="brand"
+                            class="slds-m-right_small">
+                        </lightning-button>
+                        <lightning-button 
+                            label="Export Report" 
+                            onclick={exportReport} 
+                            variant="neutral"
+                            class="slds-m-right_small">
+                        </lightning-button>
+                        <lightning-button 
+                            label="Advanced Settings" 
+                            onclick={openSettings} 
+                            variant="neutral">
+                        </lightning-button>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+
+    </lightning-card>
+</template>

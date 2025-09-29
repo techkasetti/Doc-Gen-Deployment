@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>58.0</apiVersion>
+    <description>
+        Production Monitoring Dashboard for Context-Aware Document Generator 
+        with real-time health status, performance metrics, and alert management.
+    </description>
+    <isExposed>true</isExposed>
+    <masterLabel>Production Monitoring Dashboard</masterLabel>
+
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__Tab</target>
+    </targets>
+
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__HomePage">
+            <property name="height" type="Integer" default="800"/>
+            <property name="refreshInterval" type="Integer" default="30"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

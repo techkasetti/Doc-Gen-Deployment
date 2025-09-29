@@ -1,0 +1,145 @@
+.document-content-area {
+    min-height: 600px;
+    background-color: #f8f9fa;
+    border: 1px solid #d8dde6;
+    border-radius: 0.25rem;
+}
+
+.document-preview {
+    width: 100%;
+    height: 100%;
+}
+
+.responsive-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.text-content {
+    padding: 1rem;
+    background-color: white;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.metadata-sidebar {
+    background-color: #fafaf9;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+}
+
+.compliance-score-container {
+    text-align: center;
+}
+
+.score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(#04844b 0deg, #04844b calc(var(--score) * 3.6deg), #e5e5e5 calc(var(--score) * 3.6deg));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+}
+
+.score-circle::before {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.score-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.compliance-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.insight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.insight-icon {
+    margin-top: 0.125rem;
+}
+
+.insight-text {
+    flex: 1;
+    font-size: 0.875rem;
+}
+
+.insight-confidence {
+    font-size: 0.75rem;
+    color: #706e6b;
+    font-style: italic;
+}
+
+.full-width-button {
+    width: 100%;
+}
+
+.comments-section {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.comment-item {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 3px solid #0176d3;
+}
+
+.comment-reactions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.nested-replies {
+    border-left: 2px solid #d8dde6;
+    padding-left: 1rem;
+}
+
+.reply-item {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .document-content-area {
+        min-height: 400px;
+    }
+    
+    .score-circle {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .score-circle::before {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .score-value {
+        font-size: 1rem;
+    }
+}

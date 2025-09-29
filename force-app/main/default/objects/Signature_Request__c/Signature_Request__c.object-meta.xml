@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+  <label>Signature Request</label>
+  <pluralLabel>Signature Requests</pluralLabel>
+  <nameField>
+    <type>AutoNumber</type>
+    <label>Signature Request Number</label>
+    <displayFormat>SR-{00000}</displayFormat>
+  </nameField>
+  <deploymentStatus>Deployed</deploymentStatus>
+  <sharingModel>ReadWrite</sharingModel>
+
+  <fields>
+    <fullName>Document__c</fullName>
+    <label>Document</label>
+    <type>Lookup</type>
+    <referenceTo>Document__c</referenceTo>
+  </fields>
+
+  <fields>
+    <fullName>SignerEmail__c</fullName>
+    <label>Signer Email</label>
+    <type>Email</type>
+  </fields>
+
+  <fields>
+    <fullName>ProviderId__c</fullName>
+    <label>Provider Id</label>
+    <type>Text</type>
+    <length>255</length>
+  </fields>
+
+  <fields>
+    <fullName>SignatureStatus__c</fullName>
+    <label>Signature Status</label>
+    <type>Picklist</type>
+    <valueSet>
+      <valueSetDefinition>
+        <value><fullName>Pending</fullName></value>
+        <value><fullName>Sent</fullName></value>
+        <value><fullName>Completed</fullName></value>
+        <value><fullName>Failed</fullName></value>
+      </valueSetDefinition>
+    </valueSet>
+  </fields>
+
+  <fields>
+    <fullName>SignatureHash__c</fullName>
+    <label>Signature Hash</label>
+    <type>Text</type>
+    <length>128</length>
+  </fields>
+
+</CustomObject>
