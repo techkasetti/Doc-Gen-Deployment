@@ -33,6 +33,6 @@ jobs:
           cat deploy-result.json 
 on:    
   push:
-    branches: [ main ]
+    branches: [ main ] 
     paths:
       - 'force-app/**'
