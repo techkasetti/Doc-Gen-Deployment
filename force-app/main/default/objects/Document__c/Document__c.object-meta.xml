@@ -8,7 +8,7 @@
     <displayFormat>DOC-{000000}</displayFormat>
   </nameField>
   <deploymentStatus>Deployed</deploymentStatus>
-  <sharingModel>ReadWrite</sharingModel>
+  <sharingModel>ReadWrite</sharingModel> 
  
   <fields>
     <fullName>Template__c</fullName>

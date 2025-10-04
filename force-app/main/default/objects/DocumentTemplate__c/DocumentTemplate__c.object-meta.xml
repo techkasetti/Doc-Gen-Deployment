@@ -6,7 +6,7 @@
     <label>Template Name</label>
     <type>Text</type>
   </nameField>
-  <deploymentStatus>Deployed</deploymentStatus>
+  <deploymentStatus>Deployed</deploymentStatus> 
   <sharingModel>ReadWrite</sharingModel>
   <fields>
     <fullName>Template_Content__c</fullName>

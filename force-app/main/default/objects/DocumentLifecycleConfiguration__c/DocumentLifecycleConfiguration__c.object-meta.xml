@@ -11,7 +11,7 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>Accept</actionName>
-        <formFactor>Small</formFactor>
+        <formFactor>Small</formFactor> 
         <type>Default</type> 
     </actionOverrides>
     <actionOverrides>

@@ -4,7 +4,7 @@
   <pluralLabel>Templates</pluralLabel>
   <nameField>
     <type>Text</type>
-    <label>Template Name</label>
+    <label>Template Name</label> 
   </nameField>
   <deploymentStatus>Deployed</deploymentStatus>
   <sharingModel>ReadWrite</sharingModel>

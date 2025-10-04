@@ -7,7 +7,7 @@
     <type>Text</type>
   </nameField>
   <deploymentStatus>Deployed</deploymentStatus>
-  <sharingModel>ReadWrite</sharingModel>
+  <sharingModel>ReadWrite</sharingModel> 
   <fields>
     <fullName>Document__c</fullName>
     <label>Document</label>

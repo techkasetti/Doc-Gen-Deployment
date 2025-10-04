@@ -8,7 +8,7 @@
   </nameField>
   <deploymentStatus>Deployed</deploymentStatus>
   <sharingModel>ReadWrite</sharingModel> 
-  <fields>
+  <fields> 
     <fullName>RetentionDays__c</fullName>
     <label>Retention (Days)</label>
     <type>Number</type>

@@ -5,7 +5,7 @@
   <nameField>
     <label>Clause Title</label>
     <type>Text</type>
-  </nameField>
+  </nameField> 
   <deploymentStatus>Deployed</deploymentStatus>
   <sharingModel>ReadWrite</sharingModel>
   <fields>
