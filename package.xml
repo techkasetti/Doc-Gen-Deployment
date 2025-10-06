@@ -12,7 +12,7 @@
         <members>AIInsight__c</members>
         <members>WorkflowConfiguration__c</members>
         <members>RetentionPolicy__c</members>
-        <members>ESignatureComplianceConfig__mdt</members>
+    `        <members>ESignatureComplianceConfig__mdt</members>
         <name>CustomObject</name>
     </types>
     <types>
