@@ -10,7 +10,7 @@
   <sharingModel>ReadWrite</sharingModel> 
   <fields>
     <fullName>Document__c</fullName>
-    <label>Document</label>
+    <label>Document</label> 
     <type>Lookup</type> 
     <referenceTo>Document__c</referenceTo>
   </fields>

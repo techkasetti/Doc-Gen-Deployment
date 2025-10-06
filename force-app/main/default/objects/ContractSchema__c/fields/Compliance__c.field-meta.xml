@@ -14,7 +14,7 @@
                 <default>false</default>
                 <label>DPR</label>
             </value>
-            <value>
+            <value> 
                 <fullName>HIPAA</fullName>
                 <default>false</default>
                 <label>HIPAA</label>

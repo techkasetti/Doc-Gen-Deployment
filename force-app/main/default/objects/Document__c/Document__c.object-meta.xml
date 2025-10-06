@@ -11,7 +11,7 @@
   <sharingModel>ReadWrite</sharingModel> 
  
   <fields>
-    <fullName>Template__c</fullName>
+    <fullName>Template__c</fullName> 
     <label>Template</label>
     <type>Lookup</type>
     <referenceTo>Template__c</referenceTo>

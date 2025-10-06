@@ -7,5 +7,5 @@
         <type>Text</type>
     </nameField>
     <deploymentStatus>Deployed</deploymentStatus>
-    <sharingModel>ReadWrite</sharingModel>
+    <sharingModel>ReadWrite</sharingModel> 
 </CustomObject>

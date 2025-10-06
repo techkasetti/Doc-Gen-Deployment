@@ -11,7 +11,7 @@
 
   <!-- Core fields --> 
   <fields>
-    <fullName>Content__c</fullName>
+    <fullName>Content__c</fullName> 
     <label>Content</label>
     <type>LongTextArea</type>
     <length>32768</length>

@@ -9,7 +9,7 @@
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>  
-            <value>
+            <value> 
                 <fullName>Pending</fullName>
                 <default>false</default>
                 <label>Pending</label>

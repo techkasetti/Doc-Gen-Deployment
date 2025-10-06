@@ -10,7 +10,7 @@
   <sharingModel>ReadWrite</sharingModel>
  
   <fields>
-    <fullName>Body__c</fullName> 
+    <fullName>Body__c</fullName>  
     <label>Body</label>
     <type>LongTextArea</type>
     <length>32768</length>
