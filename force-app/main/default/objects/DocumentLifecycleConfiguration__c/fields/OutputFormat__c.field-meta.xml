@@ -15,7 +15,7 @@
                 <label>PDF</label> 
             </value>
             <value>
-                <fullName>DOCX</fullName>
+                <fullName>DOCX</fullName> 
                 <default>false</default>
                 <label>DOCX</label>
             </value>

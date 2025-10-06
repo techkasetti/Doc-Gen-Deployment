@@ -10,7 +10,7 @@
         <valueSetDefinition>
             <sorted>false</sorted>   
             <value>
-                <fullName>Internal</fullName>
+                <fullName>Internal</fullName> 
                 <default>false</default>
                 <label>Internal</label>
             </value>

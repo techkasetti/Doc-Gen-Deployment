@@ -6,7 +6,7 @@
         <label>AIInsight Name</label>
         <type>Text</type>
     </nameField>
-    <deploymentStatus>Deployed</deploymentStatus>
+    <deploymentStatus>Deployed</deploymentStatus> 
     <sharingModel>ReadWrite</sharingModel>
 </CustomObject>
  

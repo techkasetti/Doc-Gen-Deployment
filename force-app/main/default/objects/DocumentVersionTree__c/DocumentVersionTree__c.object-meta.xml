@@ -76,7 +76,7 @@
     </actionOverrides>
     <actionOverrides> 
         <actionName>List</actionName>
-        <formFactor>Large</formFactor>
+        <formFactor>Large</formFactor> 
         <type>Default</type>
     </actionOverrides>
     <actionOverrides>
