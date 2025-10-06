@@ -11,7 +11,7 @@
             <sorted>false</sorted>
             <value> 
                 <fullName>Manager</fullName> 
-                <default>false</default>
+                <default>false</default> 
                 <label>Manager</label>
             </value>
             <value>

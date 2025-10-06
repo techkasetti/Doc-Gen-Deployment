@@ -4,6 +4,6 @@
     <defaultValue>false</defaultValue>
     <label>AI Processing Enabled</label>
     <trackTrending>false</trackTrending>
-    <type>Checkbox</type>
+    <type>Checkbox</type> 
 </CustomField>
     

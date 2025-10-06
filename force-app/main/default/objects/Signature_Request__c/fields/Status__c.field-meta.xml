@@ -12,7 +12,7 @@
             <value> 
                 <fullName>Draft</fullName>
                 <default>false</default>   
-                <label>Draft</label>
+                <label>Draft</label> 
             </value>
             <value>
                 <fullName>Pending</fullName>

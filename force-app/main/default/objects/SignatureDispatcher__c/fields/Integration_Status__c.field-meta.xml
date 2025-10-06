@@ -14,7 +14,7 @@
                 <default>false</default>
                 <label>Pending</label>
             </value>
-            <value>
+            <value> 
                 <fullName>In_Progress</fullName>
                 <default>false</default>
                 <label>In_Progress</label>

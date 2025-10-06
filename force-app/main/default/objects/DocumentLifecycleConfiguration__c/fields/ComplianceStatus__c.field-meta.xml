@@ -13,7 +13,7 @@
                 <fullName>Compliant</fullName>
                 <default>false</default>
                 <label>Compliant</label> 
-            </value>
+            </value> 
             <value>
                 <fullName>Non-Compliant</fullName>
                 <default>false</default>

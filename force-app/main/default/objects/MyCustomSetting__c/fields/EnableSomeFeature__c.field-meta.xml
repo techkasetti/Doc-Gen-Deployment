@@ -7,6 +7,6 @@
     <inlineHelpText>Example feature flag</inlineHelpText>
     <label>Enable Some Feature</label>
     <trackTrending>false</trackTrending>
-    <type>Checkbox</type>
+    <type>Checkbox</type> 
 </CustomField>
     

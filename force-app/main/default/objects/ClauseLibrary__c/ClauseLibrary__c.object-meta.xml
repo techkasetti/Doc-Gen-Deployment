@@ -5,7 +5,7 @@
     <nameField>
         <label>ClauseLibrary Name</label>
         <type>Text</type>
-    </nameField>
+    </nameField> 
     <deploymentStatus>Deployed</deploymentStatus>
     <sharingModel>ReadWrite</sharingModel>
 </CustomObject>
