@@ -1,0 +1,4 @@
+<apex:page showHeader="false" sidebar="false" contentType="application/pdf" cache="true">
+    <!-- Placeholder: replace with the real PDFGeneratorPage markup -->
+    <apex:outputText value="PDF Generator placeholder - replace with production page." />
+</apex:page>
