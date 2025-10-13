@@ -1,0 +1,57 @@
+<apex:page controller="PDFGeneratorController" renderAs="pdf" 
+           standardStylesheets="false" showHeader="false" 
+           applyHtmlTag="false" applyBodyTag="false">
+
+    <html>
+    <head>
+        <style>
+            @page {
+                size: {!IF(orientation == 'landscape', 'A4 landscape', 'A4 portrait')};
+                margin: {!IF(margin != null, margin, '1in')};
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                }
+            } 
+            body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #333; }
+            .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #0070d2; padding-bottom: 10px; }
+            .document-title { font-size: 18px; font-weight: bold; color: #0070d2; margin-bottom: 5px; }
+            .document-meta { font-size: 10px; color: #666; }
+            .content { white-space: pre-wrap; word-wrap: break-word; }
+            .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 72px; color: rgba(200,200,200,0.3); z-index: -1; pointer-events: none; }
+            .compliance-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 8px; font-weight: bold; margin: 2px; }
+            .compliant { background-color: #4CAF50; color: white; }
+            .non-compliant { background-color: #f44336; color: white; }
+        </style>
+    </head>
+    
+    <body>
+        <apex:outputPanel rendered="{!watermark != null}">
+            <div class="watermark">{!watermark}</div>
+        </apex:outputPanel>
+        
+        <div class="header">
+            <div class="document-title">Document Export - {!documentTitle}</div>
+            <div class="document-meta">Generated on: {!NOW()} | Export ID: {!exportId}</div>
+        </div>
+        
+        <div class="content">
+            <apex:outputText value="{!documentContent}" escape="false"/>
+        </div>
+        
+        <apex:outputPanel rendered="{!showCompliance}">
+            <div style="margin-top: 30px; padding: 10px; border: 1px solid #ddd;">
+                <h3>Compliance Status</h3>
+                <span class="compliance-badge {!IF(gdprCompliant, 'compliant', 'non-compliant')}">
+                    GDPR {!IF(gdprCompliant, '✓', '✗')}
+                </span>
+                <span class="compliance-badge {!IF(hipaaCompliant, 'compliant', 'non-compliant')}">
+                    HIPAA {!IF(hipaaCompliant, '✓', '✗')}
+                </span>
+                <p style="margin-top: 10px; font-size: 10px;">
+                    Compliance Score: {!complianceScore}%
+                </p>
+            </div>
+        </apex:outputPanel>
+    </body>
+    </html>
+</apex:page>

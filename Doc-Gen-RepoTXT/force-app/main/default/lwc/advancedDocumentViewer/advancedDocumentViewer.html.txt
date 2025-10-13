@@ -1,0 +1,423 @@
+<template>
+    <lightning-card title={documentTitle} icon-name="utility:file">
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button 
+                    variant="brand" 
+                    label="Download" 
+                    icon-name="utility:download" 
+                    onclick={handleDownload}>
+                </lightning-button>
+                <lightning-button 
+                    variant="neutral" 
+                    label="Export PDF" 
+                    icon-name="utility:pdf_ext" 
+                    onclick={handleExportPDF}>
+                </lightning-button>
+                <lightning-button 
+                    variant="neutral" 
+                    label="Share" 
+                    icon-name="utility:share" 
+                    onclick={handleShare}>
+                </lightning-button>
+                <lightning-button-menu 
+                    alternative-text="More Actions" 
+                    icon-name="utility:down">
+                    <lightning-menu-item 
+                        value="analyze" 
+                        label="Compliance Analysis" 
+                        onclick={handleAnalyze}>
+                    </lightning-menu-item>
+                    <lightning-menu-item 
+                        value="versions" 
+                        label="View Versions" 
+                        onclick={handleViewVersions}>
+                    </lightning-menu-item>
+                    <lightning-menu-item 
+                        value="audit" 
+                        label="Audit Trail" 
+                        onclick={handleViewAudit}>
+                    </lightning-menu-item>
+                </lightning-button-menu>
+            </lightning-button-group>
+        </div>
+
+        <!-- Document Metadata Panel -->
+        <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+                <!-- Document Content Area -->
+                <div class="document-content-area">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Loading document..." size="medium">
+                        </lightning-spinner>
+                    </template>
+                    
+                    <template if:false={isLoading}>
+                        <!-- Document Preview -->
+                        <template if:true={showPreview}>
+                            <div class="document-preview">
+                                <template if:true={isPDF}>
+                                    <iframe src={documentUrl} 
+                                            width="100%" 
+                                            height="600px" 
+                                            frameborder="0">
+                                    </iframe>
+                                </template>
+                                
+                                <template if:true={isImage}>
+                                    <img src={documentUrl} 
+                                         alt={documentTitle} 
+                                         class="responsive-image">
+                                </template>
+                                
+                                <template if:true={isText}>
+                                    <div class="text-content">
+                                        <lightning-formatted-text value={textContent}>
+                                        </lightning-formatted-text>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        
+                        <!-- Unsupported Format Message -->
+                        <template if:false={showPreview}>
+                            <div class="slds-text-align_center slds-p-around_large">
+                                <lightning-icon icon-name="utility:warning" 
+                                               size="large" 
+                                               class="slds-m-bottom_small">
+                                </lightning-icon>
+                                <p class="slds-text-heading_medium">Preview not available</p>
+                                <p class="slds-text-color_weak">
+                                    This file type cannot be previewed. Click Download to view the file.
+                                </p>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Metadata and Analytics Sidebar -->
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <div class="metadata-sidebar">
+                    <!-- Document Information -->
+                    <lightning-card title="Document Information" variant="narrow">
+                        <div class="slds-p-horizontal_small">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="File Size">
+                                    File Size:
+                                </dt>
+                                <dd class="slds-item_detail slds-truncate" title={formattedFileSize}>
+                                    {formattedFileSize}
+                                </dd>
+                                
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Created Date">
+                                    Created:
+                                </dt>
+                                <dd class="slds-item_detail slds-truncate" title={formattedCreatedDate}>
+                                    {formattedCreatedDate}
+                                </dd>
+                                
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Modified Date">
+                                    Modified:
+                                </dt>
+                                <dd class="slds-item_detail slds-truncate" title={formattedModifiedDate}>
+                                    {formattedModifiedDate}
+                                </dd>
+                                
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Created By">
+                                    Created By:
+                                </dt>
+                                <dd class="slds-item_detail slds-truncate" title={createdBy}>
+                                    {createdBy}
+                                </dd>
+                                
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate" title="File Type">
+                                    Type:
+                                </dt>
+                                <dd class="slds-item_detail slds-truncate" title={fileExtension}>
+                                    {fileExtension}
+                                </dd>
+                            </dl>
+                        </div>
+                    </lightning-card>
+                    
+                    <!-- Compliance Status -->
+                    <template if:true={hasComplianceData}>
+                        <lightning-card title="Compliance Status" variant="narrow" class="slds-m-top_small">
+                            <div class="slds-p-horizontal_small">
+                                <div class="compliance-score-container">
+                                    <div class="score-circle">
+                                        <span class="score-value">{complianceScore}%</span>
+                                    </div>
+                                    <p class="slds-text-align_center slds-m-top_small">
+                                        Overall Compliance Score
+                                    </p>
+                                </div>
+                                
+                                <div class="compliance-badges slds-m-top_medium">
+                                    <lightning-badge 
+                                        label={gdprBadgeLabel} 
+                                        variant={gdprBadgeVariant} 
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-badge>
+                                    <lightning-badge 
+                                        label={hipaaBadgeLabel} 
+                                        variant={hipaaBadgeVariant} 
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-badge>
+                                </div>
+                                
+                                <template if:true={hasViolations}>
+                                    <div class="slds-m-top_medium">
+                                        <p class="slds-text-heading_small slds-text-color_error">
+                                            Compliance Issues ({violationCount})
+                                        </p>
+                                        <template for:each={violations} for:item="violation">
+                                            <p key={violation.id} class="slds-text-body_small slds-text-color_weak">
+                                                • {violation.message}
+                                            </p>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </lightning-card>
+                    </template>
+                    
+                    <!-- AI Insights -->
+                    <template if:true={hasAIInsights}>
+                        <lightning-card title="AI Insights" variant="narrow" class="slds-m-top_small">
+                            <div class="slds-p-horizontal_small">
+                                <template for:each={aiInsights} for:item="insight">
+                                    <div key={insight.id} class="insight-item slds-m-bottom_small">
+                                        <lightning-icon 
+                                            icon-name={insight.iconName} 
+                                            size="x-small" 
+                                            class="insight-icon">
+                                        </lightning-icon>
+                                        <span class="insight-text">{insight.text}</span>
+                                        <template if:true={insight.hasConfidence}>
+                                            <span class="insight-confidence">
+                                                ({insight.confidence}% confidence)
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </lightning-card>
+                    </template>
+                    
+                    <!-- Document Analytics -->
+                    <lightning-card title="Analytics" variant="narrow" class="slds-m-top_small">
+                        <div class="slds-p-horizontal_small">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate">
+                                    Views:
+                                </dt>
+                                <dd class="slds-item_detail slds-truncate">
+                                    {totalViews}
+                                </dd>
+
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate">Downloads:</dt>
+                                <dd class="slds-item_detail slds-truncate">{totalDownloads}</dd>
+
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate">Last Viewed:</dt>
+                                <dd class="slds-item_detail slds-truncate">{lastViewedDate}</dd>
+
+                                <dt class="slds-item_label slds-text-color_weak slds-truncate">Shared Count:</dt>
+                                <dd class="slds-item_detail slds-truncate">{shareCount}</dd>
+                            </dl>
+
+                            <!-- View Trend Chart -->
+                            <div class="slds-m-top_medium">
+                                <canvas id="viewTrendChart" width="200" height="100"></canvas>
+                            </div>
+                        </div>
+                    </lightning-card>
+
+                    <!-- Quick Actions -->
+                    <lightning-card title="Quick Actions" variant="narrow" class="slds-m-top_small">
+                        <div class="slds-p-horizontal_small">
+                            <div class="slds-grid slds-wrap slds-gutters">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-button variant="neutral" label="Duplicate" icon-name="utility:copy" onclick={handleDuplicate} class="full-width-button">
+                                    </lightning-button>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-button variant="neutral" label="Convert" icon-name="utility:convert" onclick={handleConvert} class="full-width-button">
+                                    </lightning-button>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-button variant="neutral" label="Archive" icon-name="utility:archive" onclick={handleArchive} class="full-width-button">
+                                    </lightning-button>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning-button variant="destructive" label="Delete" icon-name="utility:delete" onclick={handleDelete} class="full-width-button">
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments and Collaboration Section -->
+        <template if:true={enableCollaboration}>
+            <div class="slds-m-top_large">
+                <lightning-card title="Comments & Collaboration">
+                    <div class="slds-p-horizontal_medium">
+
+                        <!-- Comment Input -->
+                        <div class="slds-m-bottom_medium">
+                            <lightning-textarea label="Add a comment" value={newComment} placeholder="Share your thoughts about this document..." onchange={handleCommentChange}>
+                            </lightning-textarea>
+                            <div class="slds-m-top_small slds-text-align_right">
+                                <lightning-button variant="brand" label="Post Comment" onclick={handlePostComment} disabled={isCommentEmpty}>
+                                </lightning-button>
+                            </div>
+                        </div>
+
+                        <!-- Comments List -->
+                        <template if:true={hasComments}>
+                            <div class="comments-section">
+                                <template for:each={comments} for:item="comment">
+                                    <div key={comment.id} class="comment-item slds-m-bottom_medium">
+                                        <div class="slds-media">
+                                            <div class="slds-media__figure">
+                                                <lightning-avatar size="medium" src={comment.authorPhoto} fallback-icon-name="standard:user" alternative-text={comment.authorName}>
+                                                </lightning-avatar>
+                                            </div>
+                                            <div class="slds-media__body">
+                                                <div class="slds-grid">
+                                                    <div class="slds-col slds-has-flexi-truncate">
+                                                        <p class="slds-text-heading_small">{comment.authorName}</p>
+                                                        <p class="slds-text-body_small slds-text-color_weak">{comment.createdDate}</p>
+                                                    </div>
+                                                    <div class="slds-col slds-no-flex">
+                                                        <lightning-button-menu alternative-text="Comment Actions" icon-name="utility:down" menu-alignment="right">
+                                                            <lightning-menu-item value={comment.id} label="Edit" onclick={handleEditComment}>
+                                                            </lightning-menu-item>
+                                                            <lightning-menu-item value={comment.id} label="Delete" onclick={handleDeleteComment}>
+                                                            </lightning-menu-item>
+                                                        </lightning-button-menu>
+                                                    </div>
+                                                </div>
+                                                <div class="slds-m-top_x-small">
+                                                    <lightning-formatted-rich-text value={comment.content}>
+                                                    </lightning-formatted-rich-text>
+                                                </div>
+
+                                                <!-- Comment Reactions -->
+                                                <div class="comment-reactions slds-m-top_x-small">
+                                                    <lightning-button variant="base" icon-name="utility:like" icon-position="left" label={comment.likeCount} onclick={handleLikeComment} data-comment-id={comment.id}>
+                                                    </lightning-button>
+                                                    <lightning-button variant="base" icon-name="utility:reply" icon-position="left" label="Reply" onclick={handleReplyComment} data-comment-id={comment.id}>
+                                                    </lightning-button>
+                                                </div>
+
+                                                <!-- Nested Replies -->
+                                                <template if:true={comment.hasReplies}>
+                                                    <div class="nested-replies slds-m-top_small slds-m-left_large">
+                                                        <template for:each={comment.replies} for:item="reply">
+                                                            <div key={reply.id} class="reply-item slds-m-bottom_small">
+                                                                <div class="slds-media">
+                                                                    <div class="slds-media__figure">
+                                                                        <lightning-avatar size="small" src={reply.authorPhoto} fallback-icon-name="standard:user" alternative-text={reply.authorName}>
+                                                                        </lightning-avatar>
+                                                                    </div>
+                                                                    <div class="slds-media__body">
+                                                                        <p class="slds-text-body_small">
+                                                                            <strong>{reply.authorName}</strong>
+                                                                            <span class="slds-text-color_weak">{reply.createdDate}</span>
+                                                                        </p>
+                                                                        <p class="slds-text-body_small">{reply.content}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </lightning-card>
+            </div>
+        </template>
+
+        <!-- Modals and Overlays -->
+
+        <!-- Share Modal -->
+        <template if:true={showShareModal}>
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-share" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCloseShareModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" size="small">
+                            </lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-share" class="slds-modal__title slds-hyphenate">Share Document</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="share-url">Document URL</label>
+                            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                                <lightning-input id="share-url" type="url" value={shareUrl} readonly class="slds-input">
+                                </lightning-input>
+                                <button class="slds-input__icon slds-input__icon_right slds-button slds-button_icon" onclick={handleCopyUrl} title="Copy URL">
+                                    <lightning-icon icon-name="utility:copy" size="x-small">
+                                    </lightning-icon>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-top_medium">
+                            <label class="slds-form-element__label" for="share-email">Share via Email</label>
+                            <lightning-input id="share-email" type="email" placeholder="Enter email addresses separated by commas" value={shareEmails} onchange={handleShareEmailChange}>
+                            </lightning-input>
+                        </div>
+                        <div class="slds-form-element slds-m-top_medium">
+                            <label class="slds-form-element__label" for="share-message">Message (Optional)</label>
+                            <lightning-textarea id="share-message" placeholder="Add a personal message..." value={shareMessage} onchange={handleShareMessageChange}>
+                            </lightning-textarea>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Cancel" onclick={handleCloseShareModal}>
+                        </lightning-button>
+                        <lightning-button variant="brand" label="Send" onclick={handleSendShare} disabled={isShareButtonDisabled}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <!-- Version History Modal -->
+        <template if:true={showVersionModal}>
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-versions" class="slds-modal slds-fade-in-open slds-modal_large">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCloseVersionModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" size="small">
+                            </lightning-icon>
+                        </button>
+                        <h2 id="modal-heading-versions" class="slds-modal__title">Document Version History</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-datatable key-field="id" data={versionHistory} columns={versionColumns} hide-checkbox-column="true" onrowaction={handleVersionAction}>
+                        </lightning-datatable>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Close" onclick={handleCloseVersionModal}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </lightning-card>
+</template>

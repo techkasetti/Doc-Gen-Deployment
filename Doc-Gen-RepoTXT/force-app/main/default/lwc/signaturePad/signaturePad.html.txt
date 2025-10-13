@@ -1,0 +1,15 @@
+<template>
+  <lightning-card title="Electronic Signature" icon-name="standard:signature">
+    <div class="slds-p-around_medium">
+      <template if:true={showCanvas}>
+        <div class="signature-canvas" lwc:dom="manual"></div>
+      </template>
+      <template if:true={showTyped}>
+        <lightning-textarea label="Type signature" value={typedSignature} onchange={onTypedChange}></lightning-textarea>
+      </template>
+      <div class="slds-m-top_medium">
+        <lightning-button label="Submit" onclick={handleSubmit} variant="brand"></lightning-button>
+      </div>
+    </div>
+  </lightning-card>
+</template>

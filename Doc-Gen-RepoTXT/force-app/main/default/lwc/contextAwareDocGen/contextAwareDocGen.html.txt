@@ -1,0 +1,503 @@
+<template>
+    <lightning-card title="Context-Aware Document Generation" icon-name="standard:document">
+        
+        <!-- AI Model Selection Dropdown -->
+        <div class="slds-m-bottom_medium">
+            <lightning-combobox
+                name="aiModel"
+                label="Select AI Model"
+                value={selectedAIModel}
+                placeholder="Choose an AI model..."
+                options={aiModelOptions}
+                onchange={handleAIModelChange}>
+            </lightning-combobox>
+        </div>
+        
+        <!-- Folder Context Analysis -->
+        <div class="slds-m-bottom_medium">
+            <lightning-button
+                label="Analyze Folder Context"
+                onclick={handleAnalyzeFolderContext}
+                disabled={isAnalyzing}
+                class="slds-m-right_small">
+            </lightning-button>
+
+            <template if:true={isAnalyzing}>
+                <lightning-spinner
+                    alternative-text="Analyzing context..."
+                    size="small">
+                </lightning-spinner>
+            </template>
+        </div>
+        
+        <!-- Context Display -->
+        <template if:true={folderContext}>
+            <lightning-accordion>
+                <lightning-accordion-section
+                    name="documentSummary"
+                    label="Document Analysis Summary">
+                    <div class="context-summary">
+                        <p><strong>Total Documents:</strong> {folderContext.totalDocuments}</p>
+                        <p><strong>AI Model Used:</strong> {folderContext.selectedAIModel}</p>
+                        <p><strong>Analysis Timestamp:</strong> {formattedTimestamp}</p>
+                    </div>
+                </lightning-accordion-section>
+                
+                <lightning-accordion-section
+                    name="contextualInsights"
+                    label="Contextual Insights">
+                    <template for:each={contextInsights} for:item="insight">
+                        <div key={insight.key} class="insight-item">
+                            <p><strong>{insight.label}:</strong> {insight.value}</p>
+                        </div>
+                    </template>
+                </lightning-accordion-section>
+            </lightning-accordion>
+        </template>
+        
+        <!-- Document Generation -->
+        <div class="slds-m-top_medium">
+            <lightning-button
+                label="Generate Context-Aware Document"
+                variant="brand"
+                onclick={handleGenerateDocument}
+                disabled={generateDisabled}>
+            </lightning-button>
+        </div>
+
+    </lightning-card>
+</template>
+
+
+
+
+<!-- version v1
+<template>
+    <lightning-card 
+        title="Context-Aware Document Generation" 
+        icon-name="custom:custom63">
+        
+        <div class="slds-p-around_medium">
+            
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-combobox
+                        name="aiModel"
+                        label="Select AI Model (Anara-style)"
+                        value={selectedAIModel}
+                        placeholder="Choose your AI model..."
+                        options={aiModels}
+                        onchange={handleAIModelChange}
+                        class="slds-m-bottom_small">
+                    </lightning-combobox>
+                    
+                    <div class="slds-text-body_small slds-text-color_weak">
+                        {analysisStatusText}
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-button
+                        variant="brand"
+                        label="Analyze Folder Context"
+                        onclick={analyzeFolderContext}
+                        disabled={isAnalyzing}
+                        class="slds-m-left_small">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <template if:true={isAnalysisComplete}>
+                <div class="slds-box slds-theme_shade slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Folder Context Analysis Results
+                    </h3>
+                    
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-3">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_default">Documents:</dt>
+                                <dd class="slds-item_detail">{folderAnalysis.documents.length}</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-3">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_default">Themes:</dt>
+                                <dd class="slds-item_detail">{folderAnalysis.commonThemes.length}</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-3">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_default">AI Model:</dt>
+                                <dd class="slds-item_detail">{selectedAIModel}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <template if:true={folderAnalysis.commonThemes}>
+                        <div class="slds-m-top_small">
+                            <h4 class="slds-text-heading_x-small">Identified Themes:</h4>
+                            <div class="slds-p-top_x-small">
+                                <template for:each={folderAnalysis.commonThemes} for:item="theme">
+                                    <span key={theme} class="slds-badge slds-m-right_x-small">
+                                        {theme}
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <div class="slds-m-top_medium">
+                <h3 class="slds-text-heading_small slds-m-bottom_small">Generation Parameters</h3>
+                
+                <div class="slds-grid slds-wrap slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-input
+                            type="checkbox"
+                            label="Include Executive Summary"
+                            data-field="includeExecutiveSummary"
+                            checked={generationParameters.includeExecutiveSummary}
+                            onchange={handleParameterChange}>
+                        </lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-input
+                            type="checkbox"
+                            label="Include Compliance Content"
+                            data-field="includeCompliance"
+                            checked={generationParameters.includeCompliance}
+                            onchange={handleParameterChange}>
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <div class="slds-grid slds-wrap slds-gutters slds-m-top_small">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="tone"
+                            label="Document Tone"
+                            value={generationParameters.tone}
+                            data-field="tone"
+                            placeholder="Select tone..."
+                            options={toneOptions}
+                            onchange={handleParameterChange}>
+                        </lightning-combobox>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="audience"
+                            label="Target Audience"
+                            value={generationParameters.audience}
+                            data-field="audience"
+                            placeholder="Select audience..."
+                            options={audienceOptions}
+                            onchange={handleParameterChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-m-top_medium">
+                <lightning-combobox
+                    name="template"
+                    label="Document Template"
+                    value={selectedTemplate}
+                    placeholder="Choose a template..."
+                    options={availableTemplates}
+                    onchange={handleTemplateChange}
+                    class="slds-m-bottom_small">
+                </lightning-combobox>
+            </div>
+
+            <div class="slds-m-top_medium slds-text-align_center">
+                <lightning-button
+                    variant="neutral"
+                    label="Preview Generation"
+                    onclick={generatePreview}
+                    disabled={isGenerating}
+                    class="slds-m-right_small">
+                </lightning-button>
+                
+                <lightning-button
+                    variant="brand"
+                    label="Generate Document"
+                    onclick={generateDocument}
+                    disabled={isGenerating}>
+                </lightning-button>
+            </div>
+
+            <template if:true={isGenerating}>
+                <div class="slds-m-top_medium slds-text-align_center">
+                    <lightning-spinner
+                        alternative-text="Generating document with AI..."
+                        size="medium">
+                    </lightning-spinner>
+                    <p class="slds-m-top_small">AI is analyzing context and generating your document...</p>
+                </div>
+            </template>
+
+            <template if:true={showPreview}>
+                <div class="slds-box slds-theme_default slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Context-Aware Preview
+                    </h3>
+                    <div class="slds-text-longform slds-p-around_small" 
+                         style="max-height: 300px; overflow-y: auto;">
+                        <lightning-formatted-text value={previewContent}></lightning-formatted-text>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={generatedContent}>
+                <div class="slds-box slds-theme_success slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Generated Document (Context-Aware)
+                    </h3>
+                    <div class="slds-text-longform slds-p-around_small" 
+                         style="max-height: 400px; overflow-y: auto;">
+                        <lightning-formatted-rich-text value={generatedContent}></lightning-formatted-rich-text>
+                    </div>
+                    
+                    <div class="slds-m-top_small slds-text-align_right">
+                        <lightning-button
+                            variant="brand"
+                            label="Save Document"
+                            onclick={saveDocument}>
+                        </lightning-button>
+                        
+                        <lightning-button
+                            variant="neutral"
+                            label="Download"
+                            onclick={downloadDocument}
+                            class="slds-m-left_small">
+                        </lightning-button>
+                    </div>
+                </div>
+            </template>
+            
+        </div>
+    </lightning-card>
+</template>
+-->
+
+
+
+
+
+
+
+
+<!-- <template>
+    <lightning-card title="Context-Aware Document Generation" icon-name="custom:custom63">
+        <div class="slds-p-around_medium">
+
+          
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-combobox
+                        name="aiModel"
+                        label="Select AI Model (Anara-style)"
+                        value={selectedAIModel}
+                        placeholder="Choose your AI model..."
+                        options={aiModels}
+                        onchange={handleAIModelChange}
+                        class="slds-m-bottom_small">
+                    </lightning-combobox>
+                    <div class="slds-text-body_small slds-text-color_weak">
+                        {analysisStatusText}
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-button
+                        variant="brand"
+                        label="Analyze Folder Context"
+                        onclick={analyzeFolderContext}
+                        disabled={isAnalyzing}
+                        class="slds-m-left_small">
+                    </lightning-button>
+                </div>
+            </div>
+
+         
+            <template if:true={isAnalysisComplete}>
+                <div class="slds-box slds-theme_shade slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Folder Context Analysis Results
+                    </h3>
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-3">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_default">Documents:</dt>
+                                <dd class="slds-item_detail">{folderAnalysis.documents.length}</dd>
+                            </dl>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_default">Themes:</dt>
+                                <dd class="slds-item_detail">{folderAnalysis.commonThemes.length}</dd>
+                            </dl>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <dl class="slds-list_horizontal slds-wrap">
+                                <dt class="slds-item_label slds-text-color_default">AI Model:</dt>
+                                <dd class="slds-item_detail">{selectedAIModel}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                   
+                    <template if:true={folderAnalysis.commonThemes}>
+                        <div class="slds-m-top_small">
+                            <h4 class="slds-text-heading_x-small">Identified Themes:</h4>
+                            <div class="slds-p-top_x-small">
+                                <template for:each={folderAnalysis.commonThemes} for:item="theme">
+                                    <span key={theme} class="slds-badge slds-m-right_x-small">
+                                        {theme}
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+          
+            <div class="slds-m-top_medium">
+                <h3 class="slds-text-heading_small slds-m-bottom_small">Generation Parameters</h3>
+                <div class="slds-grid slds-wrap slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-input
+                            type="checkbox"
+                            label="Include Executive Summary"
+                            data-field="includeExecutiveSummary"
+                            checked={generationParameters.includeExecutiveSummary}
+                            onchange={handleParameterChange}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-input
+                            type="checkbox"
+                            label="Include Compliance Content"
+                            data-field="includeCompliance"
+                            checked={generationParameters.includeCompliance}
+                            onchange={handleParameterChange}>
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <div class="slds-grid slds-wrap slds-gutters slds-m-top_small">
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="tone"
+                            label="Document Tone"
+                            value={generationParameters.tone}
+                            data-field="tone"
+                            placeholder="Select tone..."
+                            options={toneOptions}
+                            onchange={handleParameterChange}>
+                        </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning-combobox
+                            name="audience"
+                            label="Target Audience"
+                            value={generationParameters.audience}
+                            data-field="audience"
+                            placeholder="Select audience..."
+                            options={audienceOptions}
+                            onchange={handleParameterChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+            </div>
+
+         
+            <div class="slds-m-top_medium">
+                <lightning-combobox
+                    name="template"
+                    label="Document Template"
+                    value={selectedTemplate}
+                    placeholder="Choose a template..."
+                    options={availableTemplates}
+                    onchange={handleTemplateChange}
+                    class="slds-m-bottom_small">
+                </lightning-combobox>
+            </div>
+
+           
+            <div class="slds-m-top_medium slds-text-align_center">
+                <lightning-button
+                    variant="neutral"
+                    label="Preview Generation"
+                    onclick={generatePreview}
+                    disabled={isGenerating}
+                    class="slds-m-right_small">
+                </lightning-button>
+                <lightning-button
+                    variant="brand"
+                    label="Generate Document"
+                    onclick={generateDocument}
+                    disabled={isGenerating}>
+                </lightning-button>
+            </div>
+
+            
+            <template if:true={isGenerating}>
+                <div class="slds-m-top_medium slds-text-align_center">
+                    <lightning-spinner
+                        alternative-text="Generating document with AI..."
+                        size="medium">
+                    </lightning-spinner>
+                    <p class="slds-m-top_small">
+                        AI is analyzing context and generating your document...
+                    </p>
+                </div>
+            </template>
+
+           
+            <template if:true={showPreview}>
+                <div class="slds-box slds-theme_default slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Context-Aware Preview
+                    </h3>
+                    <div class="slds-text-longform slds-p-around_small" style="max-height: 300px; overflow-y: auto;">
+                        <lightning-formatted-text value={previewContent}></lightning-formatted-text>
+                    </div>
+                </div>
+            </template>
+
+           
+            <template if:true={generatedContent}>
+                <div class="slds-box slds-theme_success slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Generated Document (Context-Aware)
+                    </h3>
+                    <div class="slds-text-longform slds-p-around_small" style="max-height: 400px; overflow-y: auto;">
+                        <lightning-formatted-rich-text value={generatedContent}></lightning-formatted-rich-text>
+                    </div>
+                    <div class="slds-m-top_small slds-text-align_right">
+                        <lightning-button
+                            variant="brand"
+                            label="Save Document"
+                            onclick={saveDocument}>
+                        </lightning-button>
+                        <lightning-button
+                            variant="neutral"
+                            label="Download"
+                            onclick={downloadDocument}
+                            class="slds-m-left_small">
+                        </lightning-button>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template> -->

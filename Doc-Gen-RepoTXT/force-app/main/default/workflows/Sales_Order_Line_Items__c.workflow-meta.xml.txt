@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>MagNET_Shipment_Error</fullName>
+        <description>MagNET Shipment Error</description>
+        <protected>false</protected>
+        <recipients>
+            <recipient>crm.support@mainetti.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>MagNET_Email/MagNETSOACheck</template>
+    </alerts>
+    <rules>
+        <fullName>OverShipInMagNET</fullName>
+        <actions>
+            <name>MagNET_Shipment_Error</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Sales_Order_Line_Items__c.Remaining_Qty__c</field>
+            <operation>lessThan</operation>
+            <value>0</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+</Workflow>

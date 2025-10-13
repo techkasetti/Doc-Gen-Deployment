@@ -1,0 +1,1 @@
+<template><lightning-button label="Suggest Clause" onclick={handleSuggest}></lightning-button></template>

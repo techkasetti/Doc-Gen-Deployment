@@ -1,0 +1,233 @@
+/* productionMonitoringDashboard.css */
+
+/* ------------------------------
+   System Status Styles
+------------------------------ */
+.status-healthy,
+.status-warning,
+.status-critical,
+.status-unknown {
+    color: white;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    text-align: center;
+}
+
+.status-healthy {
+    background-color: #4bca81;
+}
+
+.status-warning {
+    background-color: #ffb75d;
+}
+
+.status-critical {
+    background-color: #ea001e;
+}
+
+.status-unknown {
+    background-color: #706e6b;
+}
+
+.status-icon {
+    display: block;
+    margin: 0 auto 0.5rem;
+}
+
+.status-label {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.status-value {
+    font-size: 1.125rem;
+    font-weight: bold;
+}
+
+/* ------------------------------
+   Metric Cards
+------------------------------ */
+.metric-card {
+    background-color: #f3f3f3;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    text-align: center;
+    border-left: 4px solid #1589ee;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #706e6b;
+    margin-top: 0.5rem;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #181818;
+}
+
+/* ------------------------------
+   Stat Cards
+------------------------------ */
+.stat-card {
+    background-color: white;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-card.success {
+    border-left: 4px solid #4bca81;
+}
+
+.stat-card.error {
+    border-left: 4px solid #ea001e;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #181818;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #706e6b;
+    margin-top: 0.25rem;
+}
+
+/* ------------------------------
+   Component Health
+------------------------------ */
+.component-health-item {
+    background-color: #fafaf9;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    border-left: 3px solid #1589ee;
+}
+
+/* ------------------------------
+   Alerts
+------------------------------ */
+.alert-item {
+    background-color: #fff2e5;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    border-left: 3px solid #ffb75d;
+    align-items: center;
+}
+
+.alert-severity {
+    font-size: 0.75rem;
+}
+
+/* ------------------------------
+   Charts
+------------------------------ */
+.chart-container {
+    height: 300px;
+    margin: 1rem 0;
+    background-color: #fafaf9;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.performance-chart {
+    width: 100%;
+    height: 100%;
+}
+
+/* ------------------------------
+   AI Model Card
+------------------------------ */
+.ai-model-card {
+    background-color: white;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.model-name {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.model-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.125rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.model-status.active {
+    background-color: #4bca81;
+    color: white;
+}
+
+.model-status.warning {
+    background-color: #ffb75d;
+    color: white;
+}
+
+.model-confidence {
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+/* ------------------------------
+   Resource Usage
+------------------------------ */
+.resource-card {
+    background-color: white;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.resource-label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.usage-bar {
+    height: 8px;
+    background-color: #dddbda;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.usage-fill {
+    height: 100%;
+    background-color: #1589ee;
+    transition: width 0.3s ease;
+}
+
+.usage-text {
+    font-size: 0.875rem;
+    color: #706e6b;
+}
+
+/* ------------------------------
+   Health Report
+------------------------------ */
+.health-report-content {
+    background-color: #fafaf9;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.health-report-content pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin: 0;
+    white-space: pre-wrap;
+}

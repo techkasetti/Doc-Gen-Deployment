@@ -1,0 +1,4 @@
+<apex:page showHeader="false" sidebar="false" contentType="application/pdf" cache="true">
+  <!-- Placeholder: replace with the real AnalyticsReportPDF page retrieved from the org -->
+  <apex:outputText value="AnalyticsReportPDF placeholder - replace with production page." />
+</apex:page>

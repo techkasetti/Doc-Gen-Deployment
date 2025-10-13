@@ -1,0 +1,36 @@
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.slds-accordion__content {
+    background-color: #f8f9fa;
+}
+
+.search-input {
+    position: relative;
+}
+
+.search-input lightning-input {
+    margin-bottom: 0.5rem;
+}
+
+.filter-section {
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.active-filters {
+    background-color: #f3f2f2;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    border-left: 3px solid #0176d3;
+}
+
+.loading-spinner {
+    position: relative;
+    height: 2rem;
+}

@@ -1,0 +1,5 @@
+<template>
+  <lightning-card title="AI Model Management" icon-name="standard:einstein">
+    <!-- TODO: Implement UI -->
+  </lightning-card>
+</template>
