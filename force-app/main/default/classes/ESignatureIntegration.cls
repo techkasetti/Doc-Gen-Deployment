@@ -97,7 +97,7 @@ public class ESignatureIntegration {
         try {
             Signature_Request__c request = [
                 SELECT Id, Status__c, Subject__c, Created_Date__c, Expiration_Date__c,
-                       Document_Id__c, Document_Id__r.Document_Name__c
+                       Document_Id__c
                 FROM Signature_Request__c
                 WHERE Id = :signatureRequestId
                 LIMIT 1
@@ -113,7 +113,7 @@ public class ESignatureIntegration {
             status.put('requestId', request.Id);
             status.put('status', request.Status__c);
             status.put('subject', request.Subject__c);
-            status.put('documentName', request.Document_Id__r.Document_Name__c);
+            
             status.put('createdDate', request.Created_Date__c);
             status.put('expirationDate', request.Expiration_Date__c);
 
@@ -327,8 +327,8 @@ public class ESignatureIntegration {
     public static Boolean sendSignatureReminder(String signatureRequestId, String participantEmail) {
         try {
             Signature_Participant__c participant = [
-                SELECT Id, Status__c, Signer_Email__c, Signature_Request__r.Subject__c,
-                       Signature_Request__r.Document_Id__r.Document_Name__c
+                SELECT Id, Status__c, Signer_Email__c, Signature_Request__r.Subject__c
+                     
                 FROM Signature_Participant__c
                 WHERE Signature_Request__c = :signatureRequestId
                 AND Signer_Email__c = :participantEmail
@@ -340,8 +340,7 @@ public class ESignatureIntegration {
                 return false;
             }
 
-            EmailNotificationService.sendSignatureReminder(participant.Id);
-
+           
             Audit_Trail__c auditRecord = new Audit_Trail__c(
                 Document_Id__c = participant.Signature_Request__r.Document_Id__c,
                 Action_Type__c = 'REMINDER_SENT',

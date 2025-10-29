@@ -12,6 +12,8 @@ public with sharing class WebhookManager {
             this.processedAt = DateTime.now();
         }
     }
+
+    
     
     @AuraEnabled
     public static WebhookResult registerWebhook(String url, String eventType) {
@@ -40,9 +42,10 @@ public with sharing class WebhookManager {
             result.responseData.put('secretKey', webhook.Secret_Key__c);
             
             // Test webhook connection
-            Boolean connectionTest = testWebhookConnection(url);
-            result.responseData.put('connectionTest', connectionTest);
-            
+           Map<String, Object> connectionTestResult = testWebhookConnection(url);
+Boolean connectionTest = (Boolean) connectionTestResult.get('success');
+result.responseData.put('connectionTest', connectionTest);
+
             return result;
         } catch (Exception e) {
             result.status = 'ERROR';
@@ -478,20 +481,21 @@ public with sharing class WebhookManager {
     }
     
     private static void logWebhookDelivery(String webhookId, Integer statusCode, String responseBody) {
-        try {
-            Webhook_Delivery_Log__c log = new Webhook_Delivery_Log__c(
-                Webhook_ID__c = webhookId,
-                Status_Code__c = statusCode,
-                Response_Body__c = responseBody != null && responseBody.length() > 255 ? 
-                    responseBody.substring(0, 255) : responseBody,
-                Delivery_Date__c = DateTime.now(),
-                Success__c = statusCode >= 200 && statusCode < 300
-            );
-            insert log;
-        } catch (Exception e) {
-            System.debug('Error logging webhook delivery: ' + e.getMessage());
-        }
+    try {
+        Webhook_Delivery_Log__c log = new Webhook_Delivery_Log__c(
+            Webhook_ID__c = webhookId,
+            Status_Code__c = statusCode,
+            Response_Body__c = responseBody != null && responseBody.length() > 255 ? 
+                responseBody.substring(0, 255) : responseBody,
+            Delivery_Date__c = DateTime.now(),
+            Success__c = statusCode >= 200 && statusCode < 300
+        );
+        insert log;
+    } catch (Exception e) {
+        System.debug('Error logging webhook delivery: ' + e.getMessage());
     }
+}
+
     
     private static void createComplianceAlert(String violationId, String violationType) {
         try {
@@ -510,60 +514,36 @@ public with sharing class WebhookManager {
         }
     }
     
-    @AuraEnabled
-    public static Map<String, Object> retryFailedWebhook(String webhookId, Map<String, Object> eventData) {
-        Map<String, Object> result = new Map<String, Object>();
-        try {
-            Webhook_Registration__c webhook = [
-                SELECT Id, Webhook_URL__c, Secret_Key__c, Event_Type__c
-                FROM Webhook_Registration__c 
-                WHERE Id = :webhookId 
-                LIMIT 1
-            ];
-            
-            Boolean sent = sendWebhookPayload(webhook, eventData);
-            
-            if (sent) {
-                updateWebhookSuccess(webhookId);
-                result.put('status', 'SUCCESS');
-                result.put('message', 'Webhook retry successful');
-            } else {
-                updateWebhookFailure(webhookId);
-                result.put('status', 'FAILED');
-                result.put('message', 'Webhook retry failed');
-            }
-            
-            return result;
-        } catch (Exception e) {
-            result.put('status', 'ERROR');
-            result.put('message', 'Retry error: ' + e.getMessage());
-            return result;
-        }
-    }
-
-    @HttpPost
-    global static String handleIncomingWebhook() {
-        RestRequest req = RestContext.request;
-        RestResponse res = RestContext.response;
+   @AuraEnabled
+public static Map<String, Object> retryFailedWebhook(String webhookId, Map<String, Object> eventData) {
+    Map<String, Object> result = new Map<String, Object>();
+    try {
+        Webhook_Registration__c webhook = [
+            SELECT Id, Webhook_URL__c, Secret_Key__c, Event_Type__c
+            FROM Webhook_Registration__c 
+            WHERE Id = :webhookId 
+            LIMIT 1
+        ];
         
-        try {
-            String payload = req.requestBody.toString();
-            String source = req.headers.get('X-Source-System');
-            
-            // Process webhook based on source
-            Map<String, Object> result = processWebhook(source, payload);
-            
-            res.statusCode = 200;
-            return JSON.serialize(result);
-        } catch (Exception e) {
-            res.statusCode = 500;
-            return JSON.serialize(new Map<String, Object>{
-                'success' => false,
-                'error'   => e.getMessage()
-            });
+        Boolean sent = sendWebhookPayload(webhook, eventData);
+        
+        if (sent) {
+            updateWebhookSuccess(webhookId);
+            result.put('status', 'SUCCESS');
+            result.put('message', 'Webhook retry successful');
+        } else {
+            updateWebhookFailure(webhookId);
+            result.put('status', 'FAILED');
+            result.put('message', 'Webhook retry failed');
         }
+    } catch (Exception e) {
+        result.put('status', 'ERROR');
+        result.put('message', 'Retry error: ' + e.getMessage());
     }
+    return result;
+}
 
+    
     @AuraEnabled
     public static Map<String, Object> sendWebhook(String endpoint, Map<String, Object> payload, String apiKey) {
         Map<String, Object> result = new Map<String, Object>();

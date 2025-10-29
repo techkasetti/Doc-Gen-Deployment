@@ -83,12 +83,19 @@ public class PerformanceMonitorSchedulable implements Schedulable {
         metrics.put('dmlStatements', Limits.getDmlStatements());
 
         // Active users (approximate)
-        Integer activeUsers = [
-            SELECT COUNT_DISTINCT(CreatedById) 
-            FROM AuditTrail__c 
-            WHERE Timestamp__c >= :oneHourAgo
-        ];
-        metrics.put('activeUsers', activeUsers);
+       List<AggregateResult> results = [
+    SELECT COUNT_DISTINCT(CreatedById) countUsers
+    FROM AuditTrail__c
+    WHERE Timestamp__c >= :oneHourAgo
+];
+
+Integer activeUsers = 0;
+if (!results.isEmpty()) {
+    activeUsers = (Integer) results[0].get('countUsers');
+}
+
+metrics.put('activeUsers', activeUsers);
+
 
         // Throughput (operations per hour)
         Integer throughput = [

@@ -1,4 +1,4 @@
-    public with sharing class SignatureDispatcher {
+public with sharing class SignatureDispatcher {
         
         @future(callout=true)
         public static void dispatchToExternalProvider(String requestId, String provider) {

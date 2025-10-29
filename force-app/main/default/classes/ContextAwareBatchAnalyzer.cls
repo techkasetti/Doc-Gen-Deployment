@@ -69,7 +69,7 @@ public class ContextAwareBatchAnalyzer implements Database.Batchable<sObject>, D
             System.debug('Error consolidating batch results: ' + e.getMessage());
         }
     }
-
+    
     private void sendBatchCompletionNotification(String batchId) {
         // Notification logic
     }

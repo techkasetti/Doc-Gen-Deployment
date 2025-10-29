@@ -63,7 +63,6 @@ public with sharing class DeploymentManager {
                 Package_Name__c        = packageName,
                 Target_Environment__c  = targetEnvironment,
                 Status__c              = 'IN_PROGRESS',
-                Started_By__c          = UserInfo.getUserId(),
                 Started_At__c          = DateTime.now()
             );
             insert deployRecord;
@@ -118,8 +117,7 @@ public with sharing class DeploymentManager {
         try {
             Deployment_Record__c deployment = [
                 SELECT Id, Deployment_Id__c, Package_Name__c, Target_Environment__c, 
-                       Status__c, Started_At__c, Completed_At__c, Deployment_Notes__c,
-                       Started_By__r.Name
+                       Status__c, Started_At__c, Completed_At__c, Deployment_Notes__c
                 FROM Deployment_Record__c 
                 WHERE Deployment_Id__c = :deploymentId 
                 LIMIT 1
@@ -131,7 +129,6 @@ public with sharing class DeploymentManager {
             status.put('status', deployment.Status__c);
             status.put('startedAt', deployment.Started_At__c);
             status.put('completedAt', deployment.Completed_At__c);
-            status.put('startedBy', deployment.Started_By__r.Name);
             status.put('notes', deployment.Deployment_Notes__c);
 
             // Calculate duration if completed
@@ -152,51 +149,12 @@ public with sharing class DeploymentManager {
     // ===== ROLLBACK =====
     @AuraEnabled
     public static Map<String, Object> rollbackDeployment(String deploymentId, String reason) {
-        Map<String, Object> rollback = new Map<String, Object>();
+        Map<String, Object> rollbackResult = new Map<String, Object>();
 
-        try {
-            // Create rollback record
-            Deployment_Rollback__c rollbackRecord = new Deployment_Rollback__c(
-                Original_Deployment_Id__c = deploymentId,
-                Rollback_Reason__c        = reason,
-                Status__c                 = 'IN_PROGRESS',
-                Initiated_By__c           = UserInfo.getUserId(),
-                Initiated_At__c           = DateTime.now()
-            );
-            insert rollbackRecord;
-
-            // Execute rollback steps
-            List<String> rollbackSteps = new List<String>();
-            Boolean rollbackSuccess = true;
-
-            try {
-                rollbackSteps.add('Starting rollback process');
-                rollbackSteps.add('Backing up current state');
-                rollbackSteps.add('Restoring previous version');
-                rollbackSteps.add('Validating rollback');
-                rollbackSteps.add('Rollback completed successfully');
-            } catch (Exception e) {
-                rollbackSuccess = false;
-                rollbackSteps.add('Rollback failed: ' + e.getMessage());
-            }
-
-            // Update rollback record
-            rollbackRecord.Status__c        = rollbackSuccess ? 'SUCCESS' : 'FAILED';
-            rollbackRecord.Completed_At__c  = DateTime.now();
-            rollbackRecord.Rollback_Notes__c = String.join(rollbackSteps, '\n');
-            update rollbackRecord;
-
-            rollback.put('rollbackId', rollbackRecord.Id);
-            rollback.put('status', rollbackRecord.Status__c);
-            rollback.put('steps', rollbackSteps);
-            rollback.put('success', rollbackSuccess);
-
-        } catch (Exception e) {
-            rollback.put('success', false);
-            rollback.put('error', e.getMessage());
-        }
-
-        return rollback;
+        // Rollback logic removed due to missing object. Implement when Deployment_Rollback__c is available.
+        rollbackResult.put('success', false);
+        rollbackResult.put('error', 'Rollback functionality is not available. Custom object Deployment_Rollback__c is missing.');
+        return rollbackResult;
     }
 
     // ===== HELPERS =====

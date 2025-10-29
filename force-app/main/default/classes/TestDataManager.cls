@@ -1,4 +1,4 @@
-// TestDataManager.cls
+// TestDataManager.txt
 public with sharing class TestDataManager {
 
     @AuraEnabled

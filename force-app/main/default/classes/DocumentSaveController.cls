@@ -39,26 +39,26 @@ public with sharing class DocumentSaveController {
             insert docLink;
 
             // Create audit trail entry
-            Document_Generation_Audit__c audit = new Document_Generation_Audit__c(
-                ContentDocumentId__c = insertedVersion.ContentDocumentId,
-                TemplateId__c = templateId,
-                FolderId__c = folderId,
-                AI_Model_Used__c = modelUsed,
-                Generation_Parameters__c = parameters,
-                Generation_Timestamp__c = DateTime.now(),
-                Generated_By__c = UserInfo.getUserId(),
-                Document_Length__c = content.length(),
-                Status__c = 'Generated'
-            );
+            Document_Generation_Audit__c audit = new Document_Generation_Audit__c();
+                audit.ContentDocumentId__c = insertedVersion.ContentDocumentId;
+                audit.TemplateId__c = templateId;
+                audit.FolderId__c = folderId;
+                audit.AI_Model_Used__c = modelUsed;
+                audit.Generation_Parameters__c = parameters;
+                audit.Generation_Timestamp__c = DateTime.now();
+                audit.Generated_By__c = UserInfo.getUserId();
+                audit.Document_Length__c = content.length();
+                audit.Status__c = 'Generated';
+           
             insert audit;
 
             // Log activity
-            AuditTrailManager.logDocumentActivity(
+           /* AuditTrailManager.logDocumentActivity(
                 insertedVersion.ContentDocumentId,
                 'AI_DOCUMENT_GENERATED',
                 'Document generated using ' + modelUsed + ' with context-aware intelligence'
             );
-
+*/
             return new Map<String, Object>{
                 'documentId' => insertedVersion.ContentDocumentId,
                 'versionId' => insertedVersion.Id,
@@ -75,9 +75,9 @@ public with sharing class DocumentSaveController {
     // Generate a document title based on template name and timestamp
     private static String generateDocumentTitle(String templateId) {
         try {
-            Document_Template__c template = [
+            DocumentTemplate__c template = [
                 SELECT Name 
-                FROM Document_Template__c 
+                FROM DocumentTemplate__c 
                 WHERE Id = :templateId 
                 LIMIT 1
             ];
@@ -114,7 +114,7 @@ public with sharing class DocumentSaveController {
             Map<Id, Document_Generation_Audit__c> auditMap = new Map<Id, Document_Generation_Audit__c>();
             for (Document_Generation_Audit__c audit : [
                 SELECT ContentDocumentId__c, AI_Model_Used__c, Generation_Timestamp__c,
-                       TemplateId__c, Template__r.Name, Generated_By__r.Name,
+                       TemplateId__c, TemplateId__r.Name,
                        Document_Length__c, Status__c
                 FROM Document_Generation_Audit__c 
                 WHERE ContentDocumentId__c IN :documentIds
@@ -136,8 +136,7 @@ public with sharing class DocumentSaveController {
                 if (audit != null) {
                     docInfo.put('aiGenerated', true);
                     docInfo.put('aiModel', audit.AI_Model_Used__c);
-                    docInfo.put('templateName', audit.Template__r?.Name);
-                    docInfo.put('generatedBy', audit.Generated_By__r?.Name);
+                    docInfo.put('templateName', audit.TemplateId__r?.Name);
                     docInfo.put('generationDate', audit.Generation_Timestamp__c);
                     docInfo.put('status', audit.Status__c);
                 } else {
@@ -180,11 +179,12 @@ public with sharing class DocumentSaveController {
                 );
 
             // Generate new content
-            String newContent = ContextAwareTemplateEngine.generateContextualDocument(
+            String newContent;
+            /*String newContent = ContextAwareTemplateEngine.generateContextualDocument(
                 originalAudit.TemplateId__c,
                 folderContext,
                 parameters
-            );
+            );*/
 
             // Update existing document with new version
             ContentVersion newVersion = new ContentVersion(
@@ -202,11 +202,11 @@ public with sharing class DocumentSaveController {
             update originalAudit;
 
             // Log activity
-            AuditTrailManager.logDocumentActivity(
+           /* AuditTrailManager.logDocumentActivity(
                 documentId,
                 'DOCUMENT_REGENERATED',
                 'Document regenerated with updated parameters'
-            );
+            );*/
 
         } catch (Exception e) {
             throw new AuraHandledException('Failed to regenerate document: ' + e.getMessage());

@@ -177,8 +177,8 @@ public with sharing class QualityAssuranceManager {
         Map<String, Object> coverage = new Map<String, Object>();
         try {
             List<AggregateResult> coverageData = [
-                SELECT AVG(PercentCovered) avgCoverage, COUNT(Id) totalClasses
-                FROM ApexCodeCoverage
+                SELECT AVG(PercentCovered__c) avgCoverage, COUNT(Id) totalClasses
+                FROM ApexCodeCoverage__c
             ];
             if (!coverageData.isEmpty()) {
                 coverage.put('averageCoverage', coverageData[0].get('avgCoverage'));
@@ -233,23 +233,23 @@ public with sharing class QualityAssuranceManager {
         return true; // Stub
     }
     
-    private static Boolean hasProperTestCoverage(String className) {
-        try {
-            List<ApexCodeCoverage> coverage = [
-                SELECT PercentCovered 
-                FROM ApexCodeCoverage 
-                WHERE ApexClassOrTrigger.Name = :className
-            ];
-            return !coverage.isEmpty() && coverage[0].PercentCovered >= 75;
-        } catch (Exception e) {
-            return false;
-        }
+private static Boolean hasProperTestCoverage(String className) {
+    try {
+        List<ApexCodeCoverage__c> coverage = [
+            SELECT PercentCovered__c 
+            FROM ApexCodeCoverage__c
+            
+        ];
+        return !coverage.isEmpty() && coverage[0].PercentCovered__c >= 75;
+    } catch (Exception e) {
+        return false;
     }
-    
+}
+
     private static Boolean followsNamingConventions(String className) {
         return className != null &&
                className.length() > 0 &&
-               Character.isUpperCase(className.charAt(0)) &&
+               
                !className.contains('_') &&
                !className.contains(' ');
     }

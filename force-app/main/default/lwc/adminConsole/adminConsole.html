@@ -1,3 +1,80 @@
 <template>
-  <!-- Admin Console Component -->
+  <lightning-card title="AI Model Admin Console" icon-name="utility:settings">
+    <div class="slds-p-around_medium">
+      <!-- Top toolbar -->
+      <div class="slds-grid slds-gutters slds-align_absolute-center slds-m-bottom_small">
+        <div class="slds-col slds-size_1-of-2">
+          <lightning-combobox
+            name="selectedModel"
+            label="Select AI Model"
+            value={selectedModel}
+            placeholder="Choose a model"
+            options={aiModelOptions}
+            onchange={handleModelSelect}>
+          </lightning-combobox>
+        </div>
+        <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+          <lightning-button label="Refresh" icon-name="utility:refresh" onclick={handleRefreshModels} class="slds-m-right_small"></lightning-button>
+          <lightning-button label="Test Connection" variant="brand" onclick={handleTestConnection} disabled={testButtonDisabled}></lightning-button>
+        </div>
+      </div>
+
+      <!-- Summary row -->
+      <div class="slds-grid slds-gutters slds-m-bottom_medium">
+        <div class="slds-col">
+          <p class="slds-text-title_bold">Models: <span class="slds-text-color_weak">{aiModels.length}</span></p>
+        </div>
+        <div class="slds-col slds-text-align_right slds-text-color_weak">
+          <small>Last updated: {lastUpdated}</small>
+        </div>
+      </div>
+
+      <!-- Data table -->
+      <lightning-datatable
+        key-field="id"
+        data={aiModels}
+        columns={columns}
+        onsort={handleSort}
+        hide-checkbox-column="true"
+        onrowaction={handleRowAction}>
+      </lightning-datatable>
+
+      <!-- Test result / history -->
+      <template if:true={showTestSection}>
+        <div class="slds-box slds-m-top_medium">
+          <h3 class="slds-text-heading_small">Connection Test</h3>
+
+          <div class={testResultClass}>
+            <lightning-icon icon-name={testResultIcon} size="small" alternative-text="result" class="slds-m-right_x-small"></lightning-icon>
+            <strong>{testResultTitle}</strong>
+            <p class="slds-m-top_x-small">{testResult}</p>
+          </div>
+
+          <template if:true={showTestHistory}>
+            <div class="slds-m-top_small">
+              <h4 class="slds-text-body_small slds-text-color_weak">Recent Test History</h4>
+              <template for:each={testHistory} for:item="h">
+                <div key={h.id} class="slds-box slds-box_xx-small slds-m-bottom_xx-small">
+                  <div class="slds-grid slds-grid_align-spread">
+                    <div class="slds-text-body_small">{h.modelName} — {h.timestamp}</div>
+                    <div class={h.statusClass}>{h.status}</div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <footer class="slds-card__footer slds-p-around_medium slds-theme_shade">
+      <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+        <div class="slds-text-body_small slds-text-color_weak">Tip: Use Test Connection to validate model credentials and endpoint.</div>
+        <div>
+          <lightning-button label="Add Model" variant="neutral" onclick={handleAddModel} class="slds-m-right_small"></lightning-button>
+          <lightning-button label="Manage Config" variant="brand" onclick={handleOpenConfig}></lightning-button>
+        </div>
+      </div>
+    </footer>
+  </lightning-card>
 </template>

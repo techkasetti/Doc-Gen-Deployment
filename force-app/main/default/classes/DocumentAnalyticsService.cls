@@ -12,12 +12,11 @@ public static Map<String, Object> getDocumentMetrics(String timeframe) {
         DateTime startDate = getStartDate(timeframe);
         
         // Query total documents + average processing time
-        List<AggregateResult> docStats = [
-            SELECT COUNT(Id) totalDocs, 
-                   AVG(Processing_Time_Seconds__c) avgProcessingTime
-            FROM Document_Generation_Log__c
-            WHERE CreatedDate >= :startDate
-        ];
+            List<AggregateResult> docStats = [
+                SELECT COUNT(Id) totalDocs
+                FROM Document_Generation_Log__c
+                WHERE CreatedDate >= :startDate
+            ];
         
         // Query completed documents separately
         Integer completedDocs = [
@@ -31,7 +30,7 @@ public static Map<String, Object> getDocumentMetrics(String timeframe) {
             AggregateResult stats = docStats[0];
             metrics.put('totalDocuments', (Integer)stats.get('totalDocs'));
             metrics.put('completedDocuments', completedDocs);
-            metrics.put('averageProcessingTime', (Decimal)stats.get('avgProcessingTime'));
+            // averageProcessingTime removed: field does not support AVG aggregate operator
         }
         
         metrics.put('success', true);

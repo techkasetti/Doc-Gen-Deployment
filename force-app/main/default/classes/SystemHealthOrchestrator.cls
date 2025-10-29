@@ -1,4 +1,5 @@
 public class SystemHealthOrchestrator {
+    
 
     public static void initializeSystemHealthMonitoring() {
         try {
@@ -7,8 +8,6 @@ public class SystemHealthOrchestrator {
             // Create initial health baseline
             createInitialHealthBaseline();
 
-            // Schedule maintenance activities
-            SystemHealthMonitor.scheduleMaintenanceActivities();
 
             // Initialize monitoring alerts
             setupMonitoringAlerts();
@@ -26,6 +25,13 @@ public class SystemHealthOrchestrator {
             throw e;
         }
     }
+
+    
+    
+    
+    
+    
+    
 
     private static void createInitialHealthBaseline() {
         SystemHealthMonitor.SystemHealthWrapper baseline = SystemHealthMonitor.getCompleteSystemHealth();

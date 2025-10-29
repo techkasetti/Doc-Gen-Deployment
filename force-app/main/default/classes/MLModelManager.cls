@@ -25,7 +25,7 @@ public with sharing class MLModelManager {
             ];
             
             for (ML_Model__c model : dbModels) {
-                ModelConfiguration config = new ModelConfiguration();
+               ModelConfiguration config = new ModelConfiguration();
                 config.modelId = model.Model_ID__c;
                 config.modelName = model.Name;
                 config.provider = model.Provider__c;

@@ -122,56 +122,49 @@ public with sharing class APIGatewayManager {
             DateTime startDate = calculateTimeframe(timeframe);
 
             // Get total + avg response time
-    AggregateResult totalStats = [
-        SELECT COUNT(Id) totalCalls, AVG(Response_Time__c) avgResponseTime
-        FROM API_Call_Log__c
-        WHERE API_Registration__c = :apiId
-        AND Call_Date__c >= :startDate
-    ];
+            AggregateResult totalStats = [
+                SELECT COUNT(Id) totalCalls, AVG(Response_Time__c) avgResponseTime
+                FROM API_Call_Log__c
+                WHERE API_Registration__c = :apiId
+                AND Call_Date__c >= :startDate
+            ];
 
-    // Get successful calls (2xx)
-    AggregateResult successStats = [
-        SELECT COUNT(Id) successfulCalls
-        FROM API_Call_Log__c
-        WHERE API_Registration__c = :apiId
-        AND Call_Date__c >= :startDate
-        AND Status_Code__c >= 200 AND Status_Code__c < 300
-    ];
+            // Get successful calls (2xx)
+            AggregateResult successStats = [
+                SELECT COUNT(Id) successfulCalls
+                FROM API_Call_Log__c
+                WHERE API_Registration__c = :apiId
+                AND Call_Date__c >= :startDate
+                AND Status_Code__c >= 200 AND Status_Code__c < 300
+            ];
 
-Integer total = (Integer)totalStats.get('totalCalls');
-Integer successful = (Integer)successStats.get('successfulCalls');
+            Integer total = (Integer)totalStats.get('totalCalls');
+            Integer successful = (Integer)successStats.get('successfulCalls');
 
+            metrics.put('totalCalls', total);
+            metrics.put('successfulCalls', successful);
+            metrics.put('failedCalls', total - successful);
+            metrics.put('successRate', total > 0 ? (successful * 100.0 / total) : 0);
+            metrics.put('averageResponseTime', totalStats.get('avgResponseTime'));
 
-            if (!callStats.isEmpty()) {
-                AggregateResult stats = callStats[0];
-                Integer total = (Integer)stats.get('totalCalls');
-                Integer successful = (Integer)stats.get('successfulCalls');
+            // Error breakdown
+            List<AggregateResult> errorStats = [
+                SELECT Status_Code__c statusCode, COUNT(Id) errorCount
+                FROM API_Call_Log__c
+                WHERE API_Registration__c = :apiId
+                AND Status_Code__c >= 400
+                AND Call_Date__c >= :startDate
+                GROUP BY Status_Code__c
+            ];
 
-                metrics.put('totalCalls', total);
-                metrics.put('successfulCalls', successful);
-                metrics.put('failedCalls', total - successful);
-                metrics.put('successRate', total > 0 ? (successful * 100.0 / total) : 0);
-                metrics.put('averageResponseTime', stats.get('avgResponseTime'));
-
-                // Error breakdown
-                List<AggregateResult> errorStats = [
-                    SELECT Status_Code__c statusCode, COUNT(Id) errorCount
-                    FROM API_Call_Log__c
-                    WHERE API_Registration__c = :apiId
-                    AND Status_Code__c >= 400
-                    AND Call_Date__c >= :startDate
-                    GROUP BY Status_Code__c
-                ];
-
-                List<Map<String, Object>> errorBreakdown = new List<Map<String, Object>>();
-                for (AggregateResult error : errorStats) {
-                    Map<String, Object> errorData = new Map<String, Object>();
-                    errorData.put('statusCode', error.get('statusCode'));
-                    errorData.put('count', error.get('errorCount'));
-                    errorBreakdown.add(errorData);
-                }
-                metrics.put('errorBreakdown', errorBreakdown);
+            List<Map<String, Object>> errorBreakdown = new List<Map<String, Object>>();
+            for (AggregateResult error : errorStats) {
+                Map<String, Object> errorData = new Map<String, Object>();
+                errorData.put('statusCode', error.get('statusCode'));
+                errorData.put('count', error.get('errorCount'));
+                errorBreakdown.add(errorData);
             }
+            metrics.put('errorBreakdown', errorBreakdown);
 
             metrics.put('timeframe', timeframe);
             metrics.put('success', true);

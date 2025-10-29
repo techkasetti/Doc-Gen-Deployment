@@ -1,0 +1,1 @@
+public class AIProcessingException extends Exception {}

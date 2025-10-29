@@ -1,4 +1,4 @@
- public class ComponentHealth {
+public class ComponentHealth {
         @AuraEnabled public String componentName { get; set; }
         @AuraEnabled public String status { get; set; }
         @AuraEnabled public Decimal healthScore { get; set; }

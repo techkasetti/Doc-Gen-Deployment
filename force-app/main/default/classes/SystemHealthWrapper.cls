@@ -1,4 +1,4 @@
- public class SystemHealthWrapper {
+public class SystemHealthWrapper {
     @AuraEnabled public Decimal overallHealthScore { get; set; }
     @AuraEnabled public String systemStatus { get; set; }
     @AuraEnabled public Decimal systemUptime { get; set; }
@@ -16,7 +16,35 @@
     @AuraEnabled public List<String> recommendations { get; set; }
     @AuraEnabled public String healthTrend { get; set; }
     @AuraEnabled public Boolean requiresAttention { get; set; }
-    
+
+    // ===== Nested Inner Classes =====
+    public class ComponentHealthStatus {
+        @AuraEnabled public String componentName { get; set; }
+        @AuraEnabled public String status { get; set; }
+        @AuraEnabled public String details { get; set; }
+
+        public ComponentHealthStatus() {
+            componentName = '';
+            status = 'OK';
+            details = '';
+        }
+    }
+
+    public class SystemAlertSummary {
+        @AuraEnabled public String alertType { get; set; }
+        @AuraEnabled public String severity { get; set; }
+        @AuraEnabled public String message { get; set; }
+        @AuraEnabled public DateTime createdAt { get; set; }
+
+        public SystemAlertSummary() {
+            alertType = '';
+            severity = 'INFO';
+            message = '';
+            createdAt = DateTime.now();
+        }
+    }
+
+    // ===== Constructor =====
     public SystemHealthWrapper() {
         this.componentHealth = new List<ComponentHealthStatus>();
         this.recentAlerts = new List<SystemAlertSummary>();

@@ -1,4 +1,4 @@
- public with sharing class DocumentLifecycleSystem {
+public with sharing class DocumentLifecycleSystem {
 
     public static String getSystemStatus() {
         Map<String, Object> systemStatus = new Map<String, Object>();

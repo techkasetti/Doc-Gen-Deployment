@@ -1,5 +1,69 @@
 <template>
-  <lightning-card title="AI Model Management" icon-name="standard:einstein">
-    <!-- TODO: Implement UI -->
-  </lightning-card>
+    <lightning-card title="AI Model Admin Console" icon-name="utility:settings">
+        <div class="slds-p-around_medium">
+            <!-- Model Selector Toolbar -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                <div class="slds-col">
+                    <lightning-combobox
+                        label="Select AI Model"
+                        value={selectedModelId}
+                        options={aiModelOptions}
+                        onchange={handleModelSelect}
+                        placeholder="Select a model"
+                    ></lightning-combobox>
+                </div>
+                <div class="slds-col slds-text-align_right">
+                    <lightning-button
+                        label="Refresh"
+                        icon-name="utility:refresh"
+                        onclick={handleRefresh}
+                        variant="neutral"
+                        class="slds-m-right_x-small"
+                    ></lightning-button>
+                    <lightning-button
+                        label="New Model"
+                        icon-name="utility:add"
+                        onclick={handleCreateModel}
+                        variant="brand"
+                    ></lightning-button>
+                </div>
+            </div>
+
+            <!-- Models Table -->
+            <lightning-datatable
+                key-field="id"
+                data={aiModels}
+                columns={columns}
+                onsort={handleSort}
+                onrowaction={handleRowAction}
+                hide-checkbox-column="true"
+            ></lightning-datatable>
+
+            <!-- Model Test Panel -->
+            <template if:true={showTestPanel}>
+                <div class="slds-box slds-m-top_medium">
+                    <h3 class="slds-text-heading_small">Test Model Connection</h3>
+                    <lightning-textarea
+                        label="Test Prompt"
+                        value={testPrompt}
+                        onchange={handleTestPromptChange}
+                    ></lightning-textarea>
+                    <div class="slds-m-top_small slds-text-align_right">
+                        <lightning-button
+                            label="Run Test"
+                            variant="brand"
+                            onclick={handleRunTest}
+                            disabled={testRunning}
+                        ></lightning-button>
+                    </div>
+                    <template if:true={testResult}>
+                        <div class="slds-box slds-theme_default slds-m-top_small">
+                            <p class="slds-text-title_bold">{testResultTitle}</p>
+                            <pre>{testResult}</pre>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
 </template>

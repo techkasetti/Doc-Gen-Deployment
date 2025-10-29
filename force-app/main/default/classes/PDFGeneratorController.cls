@@ -54,10 +54,25 @@ public with sharing class PDFGeneratorController {
             
             if (!complianceRecords.isEmpty()) {
                 DocumentComplianceTracking__c record = complianceRecords[0];
-                complianceScore = record.Compliance_Score__c;
-                gdprCompliant = record.GDPR_Compliant__c;
-                hipaaCompliant = record.HIPAA_Compliant__c;
+
+                // ✅ Convert String fields to matching data types safely
+                if (record.Compliance_Score__c != null) {
+                    try {
+                        complianceScore = Decimal.valueOf(record.Compliance_Score__c);
+                    } catch (Exception e) {
+                        complianceScore = 0; // default if invalid
+                    }
+                }
+
+                if (record.GDPR_Compliant__c != null) {
+                    gdprCompliant = (record.GDPR_Compliant__c.toLowerCase() == 'true');
+                }
+
+                if (record.HIPAA_Compliant__c != null) {
+                    hipaaCompliant = (record.HIPAA_Compliant__c.toLowerCase() == 'true');
+                }
             }
+
         } catch (Exception e) {
             System.debug('Error loading compliance data: ' + e.getMessage());
             showCompliance = false;

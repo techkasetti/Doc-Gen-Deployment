@@ -49,20 +49,20 @@ public class CollaborativeEditingManager {
         ];
 
         // Create operation record
-        EditingOperation__c editOp = new EditingOperation__c(
-            Collaborative_Session__c = sessionId,
-            Operation_Type__c = (String)operation.get('type'), // INSERT, DELETE, RETAIN, FORMAT
-            Operation_Position__c = (Integer)operation.get('position'),
-            Operation_Length__c = (Integer)operation.get('length'),
-            Operation_Content__c = (String)operation.get('content'),
-            User__c = userId,
-            Client_Revision__c = (Integer)operation.get('clientRevision'),
-            Server_Revision__c = otState.Current_Revision__c,
-            Operation_Timestamp__c = DateTime.now(),
-            Operation_Status__c = 'PENDING_TRANSFORM',
-            Operation_JSON__c = JSON.serialize(operation),
-            Conflict_Detected__c = false
-        );
+        EditingOperation__c editOp = new EditingOperation__c( );
+            editOp.Collaborative_Session__c = sessionId;
+            editOp.Operation_Type__c = (String)operation.get('type'); // INSERT, DELETE, RETAIN, FORMAT
+            editOp.Operation_Position__c = (Integer)operation.get('position');
+            editOp.Operation_Length__c = (Integer)operation.get('length');
+            editOp.Operation_Content__c = (String)operation.get('content');
+            editOp.User__c = userId;
+            editOp.Client_Revision__c = (Integer)operation.get('clientRevision');
+            editOp.Server_Revision__c = otState.Current_Revision__c;
+            editOp.Operation_Timestamp__c = DateTime.now();
+            editOp.Operation_Status__c = 'PENDING_TRANSFORM';
+            editOp.Operation_JSON__c = JSON.serialize(operation);
+            editOp.Conflict_Detected__c = false;
+      
 
         // Detect potential conflicts
         List<EditingOperation__c> conflictingOps = detectConflicts(editOp, otState);
@@ -102,9 +102,9 @@ public class CollaborativeEditingManager {
     //     ];
     // }
     private static List<EditingOperation__c> detectConflicts(EditingOperation__c newOp, OperationalTransformState__c otState) {
-        Integer minRevision = newOp.Client_Revision__c - 10;
-        Integer opStart = newOp.Operation_Position__c;
-        Integer opEnd = newOp.Operation_Position__c + newOp.Operation_Length__c;
+        Integer minRevision = Integer.Valueof(newOp.Client_Revision__c - 10);
+        Integer opStart = Integer.Valueof(newOp.Operation_Position__c);
+        Integer opEnd = Integer.Valueof(newOp.Operation_Position__c + newOp.Operation_Length__c);
 
         // Get recent operations first
         List<EditingOperation__c> candidates = [
@@ -121,8 +121,8 @@ public class CollaborativeEditingManager {
         // Apply overlap detection in Apex (since SOQL can’t do arithmetic between fields)
         List<EditingOperation__c> conflicts = new List<EditingOperation__c>();
         for (EditingOperation__c op : candidates) {
-            Integer existingStart = op.Operation_Position__c;
-            Integer existingEnd = op.Operation_Position__c + op.Operation_Length__c;
+            Integer existingStart = Integer.Valueof(op.Operation_Position__c);
+            Integer existingEnd = Integer.Valueof(op.Operation_Position__c + op.Operation_Length__c);
 
             Boolean overlaps = 
                 (existingStart <= opStart && existingEnd > opStart) ||
@@ -140,22 +140,22 @@ public class CollaborativeEditingManager {
         List<EditingConflict__c> conflictRecords = new List<EditingConflict__c>();
         
         for (EditingOperation__c conflictingOp : conflicts) {
-            EditingConflict__c conflict = new EditingConflict__c(
-                Collaborative_Session__c = newOp.Collaborative_Session__c,
-                Primary_Operation__c = newOp.Id,
-                Conflicting_Operation__c = conflictingOp.Id,
-                Conflict_Type__c = determineConflictType(newOp, conflictingOp),
-                Conflict_Severity__c = calculateConflictSeverity(newOp, conflictingOp),
-                Conflict_Position__c = Math.min(newOp.Operation_Position__c, conflictingOp.Operation_Position__c),
-                Conflict_Length__c = calculateConflictLength(newOp, conflictingOp),
-                Resolution_Strategy__c = selectResolutionStrategy(newOp, conflictingOp, otState),
-                Resolution_Status__c = 'PENDING_RESOLUTION',
-                AI_Suggested_Resolution__c = generateAIResolution(newOp, conflictingOp),
-                User_Priority_Primary__c = getUserPriority(newOp.User__c),
-                User_Priority_Conflicting__c = getUserPriority(conflictingOp.User__c),
-                Automatic_Resolution_Possible__c = canAutoResolve(newOp, conflictingOp),
-                Created_Date__c = DateTime.now()
-            );
+            EditingConflict__c conflict = new EditingConflict__c();
+                conflict.Collaborative_Session__c = newOp.Collaborative_Session__c;
+                conflict.Primary_Operation__c = newOp.Id;
+                conflict.Conflicting_Operation__c = conflictingOp.Id;
+                conflict.Conflict_Type__c = determineConflictType(newOp, conflictingOp);
+                conflict.Conflict_Severity__c = calculateConflictSeverity(newOp, conflictingOp);
+                conflict.Conflict_Position__c = Math.min(newOp.Operation_Position__c, conflictingOp.Operation_Position__c);
+                conflict.Conflict_Length__c = calculateConflictLength(newOp, conflictingOp);
+                conflict.Resolution_Strategy__c = selectResolutionStrategy(newOp, conflictingOp, otState);
+                conflict.Resolution_Status__c = 'PENDING_RESOLUTION';
+                conflict.AI_Suggested_Resolution__c = generateAIResolution(newOp, conflictingOp);
+                conflict.User_Priority_Primary__c = getUserPriority(newOp.User__c);
+                conflict.User_Priority_Conflicting__c = getUserPriority(conflictingOp.User__c);
+                conflict.Automatic_Resolution_Possible__c = canAutoResolve(newOp, conflictingOp);
+                conflict.Created_Date__c = DateTime.now();
+            
             conflictRecords.add(conflict);
         }
         
@@ -196,15 +196,15 @@ public class CollaborativeEditingManager {
     }
 
     private static Integer calculateConflictLength(EditingOperation__c op1, EditingOperation__c op2) {
-        Integer start1 = op1.Operation_Position__c;
-        Integer end1 = start1 + op1.Operation_Length__c;
-        Integer start2 = op2.Operation_Position__c;
-        Integer end2 = start2 + op2.Operation_Length__c;
+        Decimal start1 = op1.Operation_Position__c;
+        Decimal end1 = start1 + op1.Operation_Length__c;
+        Decimal start2 = op2.Operation_Position__c;
+        Decimal end2 = start2 + op2.Operation_Length__c;
         
-        Integer overlapStart = Math.max(start1, start2);
-        Integer overlapEnd = Math.min(end1, end2);
-        
-        return Math.max(0, overlapEnd - overlapStart);
+        Decimal overlapStart = Math.max(start1, start2);
+        Decimal overlapEnd = Math.min(end1, end2);
+        Integer intToDecimal = Integer.ValueOf(Math.max(0, overlapEnd - overlapStart));
+        return intToDecimal;
     }
 
     private static String selectResolutionStrategy(EditingOperation__c op1, EditingOperation__c op2, OperationalTransformState__c otState) {
@@ -583,15 +583,15 @@ private static String generateContentHash(String content) {
 }
 
 private static Integer calculateOverlapLength(EditingOperation__c op1, EditingOperation__c op2) {
-    Integer start1 = op1.Operation_Position__c;
-    Integer end1 = start1 + (op1.Operation_Length__c != null ? op1.Operation_Length__c : 0);
-    Integer start2 = op2.Operation_Position__c;
-    Integer end2 = start2 + (op2.Operation_Length__c != null ? op2.Operation_Length__c : 0);
+    Decimal start1 = op1.Operation_Position__c;
+    Decimal end1 = start1 + (op1.Operation_Length__c != null ? op1.Operation_Length__c : 0);
+    Decimal start2 = op2.Operation_Position__c;
+    Decimal end2 = start2 + (op2.Operation_Length__c != null ? op2.Operation_Length__c : 0);
     
-    Integer overlapStart = Math.max(start1, start2);
-    Integer overlapEnd = Math.min(end1, end2);
-    
-    return Math.max(0, overlapEnd - overlapStart);
+    Decimal overlapStart = Math.max(start1, start2);
+    Decimal overlapEnd = Math.min(end1, end2);
+    Integer convertDecToInt = Integer.valueof(Math.max(0, overlapEnd - overlapStart));
+    return convertDecToInt;
 }
 
 private static String calculateContentSimilarity(String content1, String content2) {
@@ -622,7 +622,14 @@ private static void applyOperationDirectly(EditingOperation__c operation, Operat
     
     // Keep only last 100 operations in queue
     if (operationQueue.size() > 100) {
-        operationQueue = operationQueue.subList(operationQueue.size() - 100, operationQueue.size());
+        // Apex List<Object> doesn't support subList(Integer, Integer) for this runtime context
+        // so create a new list and copy the last 100 items manually
+        List<Object> truncated = new List<Object>();
+        Integer startIndex = operationQueue.size() - 100;
+        for (Integer i = startIndex; i < operationQueue.size(); i++) {
+            truncated.add(operationQueue.get(i));
+        }
+        operationQueue = truncated;
     }
     
     otState.Operation_Queue_JSON__c = JSON.serialize(operationQueue);

@@ -1,12 +1,12 @@
 /**
- * @description Advanced Document Search Controller with AI-powered search capabilities
- * @author Anara AI Development Team
- * @version 1.0
- */
+* @description Advanced Document Search Controller with AI-powered search capabilities
+* @author Anara AI Development Team
+* @version 1.0
+*/
 public with sharing class DocumentSearchController {
     
-        
-    @AuraEnabled public static List<Id> searchDocuments(String q) {
+    
+    public static List<Id> searchDocuments(String q) {
         List<Id> out = new List<Id>();
         if (String.isBlank(q)) return out;
         if (!Schema.getGlobalDescribe().containsKey('Document__c')) return out;
@@ -160,9 +160,9 @@ public with sharing class DocumentSearchController {
             // Add compliance data
             if (complianceMap.containsKey(doc.Id)) {
                 DocumentComplianceTracking__c compliance = complianceMap.get(doc.Id);
-                result.complianceScore = compliance.Compliance_Score__c;
-                result.gdprCompliant = compliance.GDPR_Compliant__c;
-                result.hipaaCompliant = compliance.HIPAA_Compliant__c;
+                result.complianceScore = Decimal.valueOf(compliance.Compliance_Score__c);
+                result.gdprCompliant = Boolean.valueOf(compliance.GDPR_Compliant__c);
+                result.hipaaCompliant = Boolean.valueOf(compliance.HIPAA_Compliant__c);
             }
             
             // Calculate relevance score
@@ -224,150 +224,150 @@ public with sharing class DocumentSearchController {
         // This would integrate with AI service for semantic search
         // For now, we'll use a simplified approach
         
-for (DocumentSearchResult result : results) {
-    // Apply AI-based relevance boost
-    result.relevanceScore = result.relevanceScore * 1.1;
-    result.aiRanking = calculateAISemanticScore(result.title, aiQuery);
+        for (DocumentSearchResult result : results) {
+            // Apply AI-based relevance boost
+            result.relevanceScore = result.relevanceScore * 1.1;
+            result.aiRanking = calculateAISemanticScore(result.title, aiQuery);
+            
+            // Combine traditional relevance with AI semantic scoring
+            result.combinedScore = (result.relevanceScore * 0.6) + (result.aiRanking * 0.4);
+        }
+        
+        // Sort by combined score (highest first)
+        results.sort(new DocumentSearchResultComparator());
+        return results;
+    }
     
-    // Combine traditional relevance with AI semantic scoring
-    result.combinedScore = (result.relevanceScore * 0.6) + (result.aiRanking * 0.4);
-}
-
-// Sort by combined score (highest first)
-results.sort(new DocumentSearchResultComparator());
-return results;
-}
-
-private static Decimal calculateAISemanticScore(String documentTitle, String aiQuery) {
-    // Simplified semantic similarity calculation
-    // In production, this would call an external AI service
-    
-    String titleLower = documentTitle.toLowerCase();
-    String queryLower = aiQuery.toLowerCase();
-    
-    Decimal semanticScore = 0.0;
-    
-    // Keyword overlap scoring
-    List<String> titleWords = titleLower.split(' ');
-    List<String> queryWords = queryLower.split(' ');
-    
-    Integer matchCount = 0;
-    for (String queryWord : queryWords) {
-        for (String titleWord : titleWords) {
-            if (titleWord.contains(queryWord) || queryWord.contains(titleWord)) {
-                matchCount++;
-                break;
+    private static Decimal calculateAISemanticScore(String documentTitle, String aiQuery) {
+        // Simplified semantic similarity calculation
+        // In production, this would call an external AI service
+        
+        String titleLower = documentTitle.toLowerCase();
+        String queryLower = aiQuery.toLowerCase();
+        
+        Decimal semanticScore = 0.0;
+        
+        // Keyword overlap scoring
+        List<String> titleWords = titleLower.split(' ');
+        List<String> queryWords = queryLower.split(' ');
+        
+        Integer matchCount = 0;
+        for (String queryWord : queryWords) {
+            for (String titleWord : titleWords) {
+                if (titleWord.contains(queryWord) || queryWord.contains(titleWord)) {
+                    matchCount++;
+                    break;
+                }
             }
         }
+        
+        if (queryWords.size() > 0) {
+            semanticScore = (Decimal.valueOf(matchCount) / queryWords.size()) * 100;
+        }
+        
+        // Apply domain-specific boosts
+        if (aiQuery.containsIgnoreCase('personal data') && titleLower.contains('privacy')) {
+            semanticScore += 20;
+        }
+        if (aiQuery.containsIgnoreCase('financial') && titleLower.contains('financial')) {
+            semanticScore += 25;
+        }
+        if (aiQuery.containsIgnoreCase('healthcare') && titleLower.contains('health')) {
+            semanticScore += 25;
+        }
+        
+        return Math.min(semanticScore, 100.0);
     }
     
-    if (queryWords.size() > 0) {
-        semanticScore = (Decimal.valueOf(matchCount) / queryWords.size()) * 100;
+    private static List<String> getAvailableFileTypes() {
+        List<String> fileTypes = new List<String>();
+        
+        // Query existing documents to get available file types
+        List<AggregateResult> typeResults = [
+            SELECT FileExtension, COUNT(Id) docCount
+            FROM ContentDocument
+            WHERE FileExtension != null
+            GROUP BY FileExtension
+            ORDER BY COUNT(Id) DESC
+            LIMIT 20
+        ];
+        
+        for (AggregateResult result : typeResults) {
+            String fileType = (String) result.get('FileExtension');
+            if (String.isNotBlank(fileType)) {
+                fileTypes.add(fileType);
+            }
+        }
+        
+        return fileTypes;
     }
     
-    // Apply domain-specific boosts
-    if (aiQuery.containsIgnoreCase('personal data') && titleLower.contains('privacy')) {
-        semanticScore += 20;
-    }
-    if (aiQuery.containsIgnoreCase('financial') && titleLower.contains('financial')) {
-        semanticScore += 25;
-    }
-    if (aiQuery.containsIgnoreCase('healthcare') && titleLower.contains('health')) {
-        semanticScore += 25;
+    private static Map<String, Integer> getComplianceStatistics() {
+        Map<String, Integer> stats = new Map<String, Integer>();
+        
+        // Get GDPR compliance statistics
+        List<AggregateResult> gdprStats = [
+            SELECT GDPR_Compliant__c, COUNT(Id) complianceCount
+            FROM DocumentComplianceTracking__c
+            WHERE GDPR_Compliant__c != null
+            GROUP BY GDPR_Compliant__c
+        ];
+        
+        for (AggregateResult stat : gdprStats) {
+            Boolean isCompliant = (Boolean) stat.get('GDPR_Compliant__c');
+            Integer count = (Integer) stat.get('complianceCount');
+            stats.put('gdpr_' + (isCompliant ? 'compliant' : 'non_compliant'), count);
+        }
+        
+        // Get HIPAA compliance statistics
+        List<AggregateResult> hipaaStats = [
+            SELECT HIPAA_Compliant__c, COUNT(Id) complianceCount
+            FROM DocumentComplianceTracking__c
+            WHERE HIPAA_Compliant__c != null
+            GROUP BY HIPAA_Compliant__c
+        ];
+        
+        for (AggregateResult stat : hipaaStats) {
+            Boolean isCompliant = (Boolean) stat.get('HIPAA_Compliant__c');
+            Integer count = (Integer) stat.get('complianceCount');
+            stats.put('hipaa_' + (isCompliant ? 'compliant' : 'non_compliant'), count);
+        }
+        
+        return stats;
     }
     
-    return Math.min(semanticScore, 100.0);
-}
-
-private static List<String> getAvailableFileTypes() {
-    List<String> fileTypes = new List<String>();
-    
-    // Query existing documents to get available file types
-    List<AggregateResult> typeResults = [
-        SELECT FileExtension, COUNT(Id) docCount
-        FROM ContentDocument
-        WHERE FileExtension != null
-        GROUP BY FileExtension
-        ORDER BY COUNT(Id) DESC
-        LIMIT 20
-    ];
-    
-    for (AggregateResult result : typeResults) {
-        String fileType = (String) result.get('FileExtension');
-        if (String.isNotBlank(fileType)) {
-            fileTypes.add(fileType);
+    // Wrapper class for search results
+    public class DocumentSearchResult {
+        @AuraEnabled public Id documentId { get; set; }
+        @AuraEnabled public String title { get; set; }
+        @AuraEnabled public String fileExtension { get; set; }
+        @AuraEnabled public Integer contentSize { get; set; }
+        @AuraEnabled public DateTime createdDate { get; set; }
+        @AuraEnabled public DateTime lastModifiedDate { get; set; }
+        @AuraEnabled public String createdBy { get; set; }
+        @AuraEnabled public Decimal complianceScore { get; set; }
+        @AuraEnabled public Boolean gdprCompliant { get; set; }
+        @AuraEnabled public Boolean hipaaCompliant { get; set; }
+        @AuraEnabled public Decimal relevanceScore { get; set; }
+        @AuraEnabled public Decimal aiRanking { get; set; }
+        @AuraEnabled public Decimal combinedScore { get; set; }
+        
+        public DocumentSearchResult() {
+            this.complianceScore = 0;
+            this.gdprCompliant = false;
+            this.hipaaCompliant = false;
+            this.relevanceScore = 0;
+            this.aiRanking = 0;
+            this.combinedScore = 0;
         }
     }
     
-    return fileTypes;
-}
-
-private static Map<String, Integer> getComplianceStatistics() {
-    Map<String, Integer> stats = new Map<String, Integer>();
-    
-    // Get GDPR compliance statistics
-    List<AggregateResult> gdprStats = [
-        SELECT GDPR_Compliant__c, COUNT(Id) complianceCount
-        FROM DocumentComplianceTracking__c
-        WHERE GDPR_Compliant__c != null
-        GROUP BY GDPR_Compliant__c
-    ];
-    
-    for (AggregateResult stat : gdprStats) {
-        Boolean isCompliant = (Boolean) stat.get('GDPR_Compliant__c');
-        Integer count = (Integer) stat.get('complianceCount');
-        stats.put('gdpr_' + (isCompliant ? 'compliant' : 'non_compliant'), count);
+    // Comparator for sorting search results
+    public class DocumentSearchResultComparator implements Comparator<DocumentSearchResult> {
+        public Integer compare(DocumentSearchResult a, DocumentSearchResult b) {
+            if (a.combinedScore > b.combinedScore) return -1;
+            if (a.combinedScore < b.combinedScore) return 1;
+            return 0;
+        }
     }
-    
-    // Get HIPAA compliance statistics
-    List<AggregateResult> hipaaStats = [
-        SELECT HIPAA_Compliant__c, COUNT(Id) complianceCount
-        FROM DocumentComplianceTracking__c
-        WHERE HIPAA_Compliant__c != null
-        GROUP BY HIPAA_Compliant__c
-    ];
-    
-    for (AggregateResult stat : hipaaStats) {
-        Boolean isCompliant = (Boolean) stat.get('HIPAA_Compliant__c');
-        Integer count = (Integer) stat.get('complianceCount');
-        stats.put('hipaa_' + (isCompliant ? 'compliant' : 'non_compliant'), count);
-    }
-    
-    return stats;
-}
-
-// Wrapper class for search results
-public class DocumentSearchResult {
-    @AuraEnabled public Id documentId { get; set; }
-    @AuraEnabled public String title { get; set; }
-    @AuraEnabled public String fileExtension { get; set; }
-    @AuraEnabled public Integer contentSize { get; set; }
-    @AuraEnabled public DateTime createdDate { get; set; }
-    @AuraEnabled public DateTime lastModifiedDate { get; set; }
-    @AuraEnabled public String createdBy { get; set; }
-    @AuraEnabled public Decimal complianceScore { get; set; }
-    @AuraEnabled public Boolean gdprCompliant { get; set; }
-    @AuraEnabled public Boolean hipaaCompliant { get; set; }
-    @AuraEnabled public Decimal relevanceScore { get; set; }
-    @AuraEnabled public Decimal aiRanking { get; set; }
-    @AuraEnabled public Decimal combinedScore { get; set; }
-    
-    public DocumentSearchResult() {
-        this.complianceScore = 0;
-        this.gdprCompliant = false;
-        this.hipaaCompliant = false;
-        this.relevanceScore = 0;
-        this.aiRanking = 0;
-        this.combinedScore = 0;
-    }
-}
-
-// Comparator for sorting search results
-public class DocumentSearchResultComparator implements Comparator<DocumentSearchResult> {
-    public Integer compare(DocumentSearchResult a, DocumentSearchResult b) {
-        if (a.combinedScore > b.combinedScore) return -1;
-        if (a.combinedScore < b.combinedScore) return 1;
-        return 0;
-    }
-}
 }

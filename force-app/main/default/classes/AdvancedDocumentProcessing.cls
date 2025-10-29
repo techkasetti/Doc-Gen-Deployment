@@ -306,8 +306,8 @@ public class AdvancedDocumentProcessing {
     }
 
     @AuraEnabled(cacheable=false)
-    public static List<String> processBulkDocuments(List<String> documentIds,String processingType,Map<String, Object> parameters) {
-        List<String> results = new List<String>();
+    public static List<DocumentProcessingResult> processBulkDocuments(List<String> documentIds,String processingType,Map<String, Object> parameters) {
+        List<DocumentProcessingResult> results = new List<DocumentProcessingResult>();
         try {
             for (String docId : documentIds) {
                 DocumentProcessingResult result = processDocumentWithAI(docId, processingType, parameters);

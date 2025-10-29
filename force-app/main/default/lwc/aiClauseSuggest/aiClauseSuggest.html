@@ -1,1 +1,59 @@
-<template><lightning-button label="Suggest Clause" onclick={handleSuggest}></lightning-button></template>
+<template>
+    <lightning-card title="AI Clause Suggestions" icon-name="utility:lightbulb">
+        <div class="slds-p-around_medium">
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-m-vertical_medium">
+                    <lightning-spinner alternative-text="Loading suggestions..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Display Suggestions -->
+            <template if:false={isLoading}>
+                <template if:true={suggestions.length}>
+                    <ul class="slds-list_vertical slds-has-dividers_around-space">
+                        <template for:each={suggestions} for:item="suggestion">
+                            <li key={suggestion.id} class="slds-list__item slds-p-vertical_small">
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_9-of-12">
+                                        <p>{suggestion.text}</p>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-text-align_right">
+                                        <lightning-button
+                                            label="Use Clause"
+                                            variant="brand-outline"
+                                            data-text={suggestion.text}
+                                            onclick={handleSelectClause}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+                <template if:false={suggestions.length}>
+                    <div class="slds-align_absolute-center slds-text-color_weak">
+                        <p>Click "Generate" to get AI-powered clause suggestions.</p>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Action Button -->
+            <div class="slds-m-top_medium slds-text-align_center">
+                <lightning-button
+                    label="Generate Suggestions"
+                    variant="brand"
+                    onclick={handleSuggest}
+                    disabled={isLoading}>
+                </lightning-button>
+            </div>
+            
+            <!-- Error Message Display -->
+            <template if:true={error}>
+                <div class="slds-text-color_error slds-m-top_small">
+                    Error: {error.body.message}
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

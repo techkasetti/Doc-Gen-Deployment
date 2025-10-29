@@ -1,4 +1,4 @@
-// ProductionMonitoringService.cls
+// ProductionMonitoringService.txt
 public class ProductionMonitoringService {
     
     // ====== DTO Classes ======
@@ -115,16 +115,16 @@ public class ProductionMonitoringService {
             aiModelHealth.componentName = 'AI Models';
             aiModelHealth.lastChecked = Datetime.now().format();
             
-            List<AI_Model_Configuration__c> activeModels = [
+            List<AI_Model_Configuration_Version__c> activeModels = [
                 SELECT Id, Name, Is_Active__c, Last_Health_Check__c, Response_Time_Ms__c 
-                FROM AI_Model_Configuration__c 
+                FROM AI_Model_Configuration_Version__c
                 WHERE Is_Active__c = true
             ];
             
             if (activeModels.size() > 0) {
                 aiModelHealth.status = 'HEALTHY';
                 Decimal avgResponseTime = 0;
-                for (AI_Model_Configuration__c model : activeModels) {
+                for (AI_Model_Configuration_Version__c model : activeModels) {
                     if (model.Response_Time_Ms__c != null) {
                         avgResponseTime += model.Response_Time_Ms__c;
                     }

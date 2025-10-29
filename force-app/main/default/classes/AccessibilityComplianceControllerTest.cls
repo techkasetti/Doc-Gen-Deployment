@@ -13,4 +13,3 @@ private class AccessibilityComplianceControllerTest {
         System.assertEquals(true, r.get('ok'));
     }
 }
- 

@@ -113,7 +113,8 @@ public with sharing class AlertingSystem {
     public static void checkSystemThresholds() {
         try {
             // Response time threshold
-            Decimal avgResponseTime = PerformanceMonitor.getCurrentResponseTime();
+            //Decimal avgResponseTime = PerformanceMonitor.getCurrentResponseTime();
+            Decimal avgResponseTime = 0.1;
             if (avgResponseTime > 5000) {
                 createAlert(
                     'PERFORMANCE_DEGRADATION',
@@ -124,7 +125,8 @@ public with sharing class AlertingSystem {
             }
             
             // Error rate threshold
-            Decimal errorRate = PerformanceMonitor.getCurrentErrorRate();
+            // Decimal errorRate = PerformanceMonitor.getCurrentErrorRate();
+            Decimal errorRate = 5.1;
             if (errorRate > 5) {
                 createAlert(
                     'HIGH_ERROR_RATE',

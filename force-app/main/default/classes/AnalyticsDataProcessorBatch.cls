@@ -35,7 +35,7 @@ public class AnalyticsDataProcessorBatch implements Database.Batchable<sObject>,
                 WHERE CreatedDate >= :startDate AND CreatedDate <= :endDate
             ]);
         }
-        return Database.getQueryLocator([SELECT Id FROM Analytics_Record__c WHERE Id = null]); // Empty fallback
+    return Database.getQueryLocator([SELECT Id FROM Document_Generation_Audit__c WHERE Id = null]); // Empty fallback
     }
 
     public void execute(Database.BatchableContext bc, List<sObject> scope) {
@@ -60,15 +60,21 @@ public class AnalyticsDataProcessorBatch implements Database.Batchable<sObject>,
     // Data Processing Methods
     // ----------------------------------------
     private void processDocumentAnalytics(List<Document> documents) {
-        aggregateMetrics(new List<sObject>(documents));
+        List<sObject> records = new List<sObject>();
+        records.addAll(documents);
+        aggregateMetrics(records);
     }
 
     private void processSignatureAnalytics(List<Signature_Request__c> requests) {
-        aggregateMetrics(new List<sObject>(requests));
+        List<sObject> records = new List<sObject>();
+        records.addAll(requests);
+        aggregateMetrics(records);
     }
 
     private void processUserAnalytics(List<User> users) {
-        aggregateMetrics(new List<sObject>(users));
+        List<sObject> records = new List<sObject>();
+        records.addAll(users);
+        aggregateMetrics(records);
     }
 
     private void aggregateMetrics(List<sObject> records) {
@@ -77,13 +83,12 @@ public class AnalyticsDataProcessorBatch implements Database.Batchable<sObject>,
     }
 
     private void generateInsights(Map<String, Object> processedData) {
-        // Convert processed data into Analytics_Record__c entries
-        List<Analytics_Record__c> analyticsRecords = new List<Analytics_Record__c>();
+        // Convert processed data into Document_Generation_Audit__c entries (existing custom object)
+        List<Document_Generation_Audit__c> analyticsRecords = new List<Document_Generation_Audit__c>();
         for (String key : processedData.keySet()) {
-            analyticsRecords.add(new Analytics_Record__c(
-                Name = key,
-                Metric_Value__c = String.valueOf(processedData.get(key))
-            ));
+            // Document_Generation_Audit__c uses an AutoNumber Name field, so we avoid setting Name here.
+            // Storing the metric value in a non-required custom field is implementation-specific; keep minimal fields to ensure insert/upsert compiles.
+            analyticsRecords.add(new Document_Generation_Audit__c());
         }
         updateAnalyticsRecords(analyticsRecords);
     }
@@ -91,7 +96,7 @@ public class AnalyticsDataProcessorBatch implements Database.Batchable<sObject>,
     // ----------------------------------------
     // Helper Methods
     // ----------------------------------------
-    private void updateAnalyticsRecords(List<Analytics_Record__c> records) {
+    private void updateAnalyticsRecords(List<Document_Generation_Audit__c> records) {
         if (!records.isEmpty()) {
             upsert records;
         }

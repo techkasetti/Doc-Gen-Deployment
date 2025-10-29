@@ -4,9 +4,9 @@ public with sharing class APIManagementController {
         return new List<String>{ 'docgen.v1', 'billing.v1', 'admin.v1' };
     }
     @AuraEnabled
-    public static Boolean setQuota(String apiKey, Integer limit) {
-        if (String.isBlank(apiKey) || limit == null) return false;
-        // TODO: persist quota mapping
+    public static Boolean setQuota(String apiKey, Integer quotaLimit) {
+        if (String.isBlank(apiKey) || quotaLimit == null) return false;
+        // TODO: persist quota mapping using quotaLimit
         return true;
     }
 }

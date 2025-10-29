@@ -2,7 +2,8 @@
 public class DocumentLifecycleScheduledBatch implements Schedulable, Database.Batchable<Object> {
 
     public void execute(SchedulableContext context) {
-        Database.executeBatch(this, 200);
+        Database.executeBatch(this,
+         200);
     }
 
     public Database.QueryLocator start(Database.BatchableContext context) {
@@ -16,84 +17,84 @@ public class DocumentLifecycleScheduledBatch implements Schedulable, Database.Ba
         ]);
     }
 
-    public void execute(Database.BatchableContext context, List<DocumentLifecycleConfiguration__c> scope) {
-        try {
-            System.debug('Processing batch of ' + scope.size() + ' documents for maintenance');
+        public void execute(Database.BatchableContext context, List<Object> scope) {
+            try {
+                List<DocumentLifecycleConfiguration__c> docs = (List<DocumentLifecycleConfiguration__c>)scope;
+                System.debug('Processing batch of ' + docs.size() + ' documents for maintenance');
 
-            // Collect performance metrics
-            List<Performance_Metrics__c> metricsToInsert = new List<Performance_Metrics__c>();
+                // Collect performance metrics
+                List<Performance_Metrics__c> metricsToInsert = new List<Performance_Metrics__c>();
+                // Process compliance analytics
+                Map<String, Integer> complianceStats = new Map<String, Integer>();
+                Map<String, Decimal> performanceStats = new Map<String, Decimal>();
 
-            // Process compliance analytics
-            Map<String, Integer> complianceStats = new Map<String, Integer>();
-            Map<String, Decimal> performanceStats = new Map<String, Decimal>();
-
-            for (DocumentLifecycleConfiguration__c doc : scope) {
-                // Update compliance statistics
-                String complianceKey = doc.Document_Type__c + '_' + doc.ComplianceStatus__c;
-                if (complianceStats.containsKey(complianceKey)) {
-                    complianceStats.put(complianceKey, complianceStats.get(complianceKey) + 1);
-                } else {
-                    complianceStats.put(complianceKey, 1);
-                }
-
-                // Calculate performance metrics
-                if (doc.Overall_Compliance_Score__c != null) {
-                    String perfKey = doc.Document_Type__c + 'SCORE';
-                    if (performanceStats.containsKey(perfKey)) {
-                        performanceStats.put(perfKey,
-                            (performanceStats.get(perfKey) + doc.Overall_Compliance_Score__c) / 2
-                        );
+                for (DocumentLifecycleConfiguration__c doc : docs) {
+                    // Update compliance statistics
+                    String complianceKey = doc.Document_Type__c + '_' + doc.ComplianceStatus__c;
+                    if (complianceStats.containsKey(complianceKey)) {
+                        complianceStats.put(complianceKey, complianceStats.get(complianceKey) + 1);
                     } else {
-                        performanceStats.put(perfKey, doc.Overall_Compliance_Score__c);
+                        complianceStats.put(complianceKey, 1);
+                    }
+
+                    // Calculate performance metrics
+                    if (doc.Overall_Compliance_Score__c != null) {
+                        String perfKey = doc.Document_Type__c + 'SCORE';
+                        if (performanceStats.containsKey(perfKey)) {
+                            performanceStats.put(perfKey,
+                                (performanceStats.get(perfKey) + doc.Overall_Compliance_Score__c) / 2
+                            );
+                        } else {
+                            performanceStats.put(perfKey, doc.Overall_Compliance_Score__c);
+                        }
                     }
                 }
-            }
 
-            // Create aggregated performance metrics
-            for (String docType : new Set<String>{'Employment', 'NDA', 'Service Agreement'}) {
-                Performance_Metrics__c dailyMetric = new Performance_Metrics__c();
-                dailyMetric.Component__c = 'DAILY_BATCH' + docType;
-                dailyMetric.Response_Time_Ms__c = 2000 + (Math.random() * 2000); // Simulated
-                dailyMetric.Generation_Time_Ms__c = 1500 + (Math.random() * 1500);
-                dailyMetric.Concurrent_Users__c = Integer.valueOf(Math.random() * 10) + 1;
-                dailyMetric.Cache_Hit_Ratio__c = 85.0 + (Math.random() * 10);
-                dailyMetric.Error_Rate__c = Math.random() * 2;
-                dailyMetric.Timestamp__c = DateTime.now();
-                metricsToInsert.add(dailyMetric);
-            }
+                // Create aggregated performance metrics
+                for (String docType : new Set<String>{'Employment', 'NDA', 'Service Agreement'}) {
+                    Performance_Metrics__c dailyMetric = new Performance_Metrics__c();
+                    dailyMetric.Component__c = 'DAILY_BATCH' + docType;
+                    dailyMetric.Response_Time_Ms__c = 2000 + (Math.random() * 2000); // Simulated
+                    dailyMetric.Generation_Time_Ms__c = 1500 + (Math.random() * 1500);
+                    dailyMetric.Concurrent_Users__c = Integer.valueOf(Math.random() * 10) + 1;
+                    dailyMetric.Cache_Hit_Ratio__c = 85.0 + (Math.random() * 10);
+                    dailyMetric.Error_Rate__c = Math.random() * 2;
+                    dailyMetric.Timestamp__c = DateTime.now();
+                    metricsToInsert.add(dailyMetric);
+                }
 
-            if (!metricsToInsert.isEmpty()) {
-                insert metricsToInsert;
-                System.debug('Inserted ' + metricsToInsert.size() + ' performance metrics');
-            }
+                if (!metricsToInsert.isEmpty()) {
+                    insert metricsToInsert;
+                    System.debug('Inserted ' + metricsToInsert.size() + ' performance metrics');
+                }
 
-            // Generate system health alert if needed
-            SystemHealthMonitor.HealthMetrics currentHealth = SystemHealthMonitor.getCurrentHealthMetrics();
-            if (currentHealth.complianceScore < 95) {
-                RealTimeMonitoringService.generatePerformanceAlert(
-                    'COMPLIANCE_DEGRADATION',
-                    'Daily batch processing detected compliance score below threshold: ' + currentHealth.complianceScore,
-                    new Map<String, Object>{
-                        'complianceScore' => currentHealth.complianceScore,
-                        'threshold' => 95,
-                        'documentsProcessed' => scope.size()
-                    }
+                // Generate system health alert if needed
+                SystemHealthMonitor.HealthMetrics currentHealth = SystemHealthMonitor.getCurrentHealthMetrics();
+                if (currentHealth.complianceScore < 95) {
+                    RealTimeMonitoringService.generatePerformanceAlert(
+                        'COMPLIANCE_DEGRADATION',
+                        'Daily batch processing detected compliance score below threshold: ' + currentHealth.complianceScore,
+                        new Map<String, Object>{
+                            'complianceScore' => currentHealth.complianceScore,
+                            'threshold' => 95,
+                            'documentsProcessed' => docs.size()
+                        }
+                    );
+                }
+
+            } catch (Exception e) {
+                System.debug('Batch execution error: ' + e.getMessage());
+
+                // Create error log
+                insert new System_Error_Log__c(
+                    Error_Type__c = 'BATCH_EXECUTION',
+                    Error_Message__c = e.getMessage(),
+                    Stack_Trace__c = e.getStackTraceString(),
+                    Component__c = 'DocumentLifecycleScheduledBatch',
+                    Timestamp__c = DateTime.now()
                 );
             }
-
-        } catch (Exception e) {
-            System.debug('Batch execution error: ' + e.getMessage());
-
-            // Create error log
-            insert new System_Error_Log__c(
-                Error_Type__c = 'BATCH_EXECUTION',
-                Error_Message__c = e.getMessage(),
-                Stack_Trace__c = e.getStackTraceString(),
-                Component__c = 'DocumentLifecycleScheduledBatch',
-                Timestamp__c = DateTime.now()
-            );
         }
-    }
 
     public void finish(Database.BatchableContext context) {
         System.debug('DocumentLifecycleScheduledBatch completed');

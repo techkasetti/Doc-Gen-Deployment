@@ -2,7 +2,6 @@ import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 import { loadScript } from 'lightning/platformResourceLoader';
-import ChartJS from '@salesforce/resourceUrl/ChartJS';
 
 // Import Apex methods
 import getDocumentDetails from '@salesforce/apex/DocumentViewerController.getDocumentDetails';

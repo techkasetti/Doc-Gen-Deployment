@@ -157,8 +157,8 @@ public with sharing class ClauseGenerator {
             throw new AuraHandledException('Clause generation failed: ' + e.getMessage());
         }
     }
-      @AuraEnabled
-    public static String generateClause(String region, String role, String contractType, List<String> clauses) {
+    @AuraEnabled
+    public static String generateClauseWithList(String region, String role, String contractType, List<String> clauses) {
         try {
             // Build dynamic clause based on parameters
             String generatedClause = buildClauseContent(region, role, contractType, clauses);
@@ -173,34 +173,34 @@ public with sharing class ClauseGenerator {
             throw new AuraHandledException('Failed to generate clause: ' + e.getMessage());
         }
     }
-       private static String buildClauseContent(String region, String role, String contractType, List<String> clauses) {
-        StringBuilder clauseBuilder = new StringBuilder();
-        
-        // Base clause structure
-        clauseBuilder.append('This agreement ');
-        
+    private static String buildClauseContent(String region, String role, String contractType, List<String> clauses) {
+     String clauseBuilder = '';
+
+     // Base clause structure
+     clauseBuilder += 'This agreement ';
+
         // Add region-specific compliance
         if (region == 'EU') {
-            clauseBuilder.append('complies with GDPR requirements for EU-based ');
+            clauseBuilder += 'complies with GDPR requirements for EU-based ';
         } else if (region == 'US') {
-            clauseBuilder.append('adheres to US federal and state regulations for ');
+            clauseBuilder += 'adheres to US federal and state regulations for ';
         } else if (region == 'IN') {
-            clauseBuilder.append('follows Indian legal requirements for ');
+            clauseBuilder += 'follows Indian legal requirements for ';
         }
-        
+
         // Add role-specific terms
-        clauseBuilder.append(role.toLowerCase() + 's. ');
+        clauseBuilder += role != null ? role.toLowerCase() + 's. ' : '';
         
         // Add contract type specifics
         switch on contractType {
             when 'Employment' {
-                clauseBuilder.append('The employment terms include standard confidentiality and non-compete provisions. ');
+                clauseBuilder += 'The employment terms include standard confidentiality and non-compete provisions. ';
             }
             when 'NDA' {
-                clauseBuilder.append('Confidential information shall remain protected for a period of 5 years. ');
+                clauseBuilder += 'Confidential information shall remain protected for a period of 5 years. ';
             }
             when 'SLA' {
-                clauseBuilder.append('Service level commitments are guaranteed with 99.9% uptime. ');
+                clauseBuilder += 'Service level commitments are guaranteed with 99.9% uptime. ';
             }
         }
         
@@ -208,12 +208,12 @@ public with sharing class ClauseGenerator {
         if (clauses != null && !clauses.isEmpty()) {
             for (String clause : clauses) {
                 if (String.isNotBlank(clause)) {
-                    clauseBuilder.append(clause + '. ');
+                    clauseBuilder += clause + '. ';
                 }
             }
         }
-        
-        return clauseBuilder.toString();
+
+        return clauseBuilder;
     }
 
     /**
@@ -404,16 +404,21 @@ public with sharing class ClauseGenerator {
     //     return stats;
     // }
       private static Decimal calculateSuccessRate(List<AuditTrail__c> records) {
-        if (records.isEmpty()) return 0;
-        
+        if (records == null || records.isEmpty()) return 0;
+
         Integer successCount = 0;
         for (AuditTrail__c record : records) {
-            if (record.AdditionalInfo__c != null && record.AdditionalInfo__c.contains('SUCCESS')) {
-                successCount++;
+            try {
+                Object additional = record.get('AdditionalInfo__c');
+                if (additional != null && String.valueOf(additional).contains('SUCCESS')) {
+                    successCount++;
+                }
+            } catch (Exception e) {
+                // Field may not exist in this org - skip safely
             }
         }
-        
-        return (Decimal.valueOf(successCount) / records.size()) * 100;
+
+        return records.size() > 0 ? (Decimal.valueOf(successCount) / Decimal.valueOf(records.size())) * 100 : 0;
     }
     // @AuraEnabled
     // public static Map<String, Object> getGenerationStatistics() {

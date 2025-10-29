@@ -1,4 +1,3 @@
-
 public class EmailNotificationService {
     public static void sendTemplatedEmail(String templateName, List<String> recipients, Map<String, String> mergeData) {
         // Implementation for sending templated emails

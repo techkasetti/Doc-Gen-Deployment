@@ -1,7 +1,7 @@
 /**
  * Helper class for scoring entities
  */
-private class EntityScore implements Comparable {
+public class EntityScore implements Comparable {
     public String entity;
     public Decimal score;
     

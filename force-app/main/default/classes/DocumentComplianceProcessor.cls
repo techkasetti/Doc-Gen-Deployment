@@ -123,13 +123,13 @@ private void performPIIAnalysis(ContentVersion document, ComplianceAnalysisResul
         Integer piiMatches = 0;
         List<String> detectedPII = new List<String>();
         
-        for (String pattern : PII_PATTERNS) {
-            Pattern regexPattern = Pattern.compile(pattern);
+        for (String patternStr : PII_PATTERNS) {
+            Pattern regexPattern = Pattern.compile(patternStr);
             Matcher matcher = regexPattern.matcher(content);
             
             while (matcher.find()) {
                 piiMatches++;
-                String piiType = getPIIType(pattern);
+                String piiType = getPIIType(patternStr);
                 if (!detectedPII.contains(piiType)) {
                     detectedPII.add(piiType);
                 }
@@ -150,6 +150,7 @@ private void performPIIAnalysis(ContentVersion document, ComplianceAnalysisResul
         System.debug('PII analysis error: ' + e.getMessage());
     }
 }
+
 
 private void performRegulatoryAnalysis(ContentVersion document, ComplianceAnalysisResult result) {
     try {
@@ -283,17 +284,16 @@ private void saveAnalysisResults(Id documentId, ComplianceAnalysisResult result)
     try {
         DocumentComplianceTracking__c tracking = new DocumentComplianceTracking__c();
         tracking.Document_ID__c = documentId;
-        tracking.Compliance_Score__c = result.overallScore;
-        tracking.GDPR_Compliant__c = result.frameworkCompliance.get('GDPR');
-        tracking.HIPAA_Compliant__c = result.frameworkCompliance.get('HIPAA');
+        tracking.Compliance_Score__c = String.Valueof(result.overallScore);
+        tracking.GDPR_Compliant__c = String.Valueof(result.frameworkCompliance.get('GDPR'));
+        tracking.HIPAA_Compliant__c = String.Valueof(result.frameworkCompliance.get('HIPAA'));
         tracking.Compliance_Violations__c = String.join(result.violations, ';');
         tracking.AI_Classification__c = result.classification;
-        tracking.Risk_Score__c = result.riskScores.get('OVERALL_RISK');
+        tracking.Risk_Score__c = String.valueOf(result.riskScores.get('OVERALL_RISK'));
         tracking.Analysis_Date__c = result.analyzedDate;
         tracking.Recommendations__c = String.join(result.recommendations, ';');
-        
-        upsert tracking Document_ID__c;
-        
+        // Use insert instead of upsert if Document_ID__c is not an External Id
+        insert tracking;
     } catch (Exception e) {
         System.debug('Error saving analysis results: ' + e.getMessage());
         throw new AnaraException('Failed to save compliance analysis');

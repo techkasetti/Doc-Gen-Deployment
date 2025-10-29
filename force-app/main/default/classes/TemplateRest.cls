@@ -1,62 +1,130 @@
-\
-        @RestResource(urlMapping='/api/templates/*')
-        global with sharing class TemplateRest {
-            @HttpGet
-            global static void doGet() {
-                RestRequest req = RestContext.request;
-                RestResponse res = RestContext.response;
-                String id = req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
-                if (id == null || id == '' || id == 'api' || id == 'templates') {
-                    List<Template__c> rows = TemplateService.listTemplates(false);
-                    res.statusCode = 200;
-                    res.responseBody = Blob.valueOf(JSON.serialize(rows));
-                    return;
-                }
-                try {
-                    Template__c t = TemplateService.getTemplateById(Id.valueOf(id));
-                    res.statusCode = 200;
-                    res.responseBody = Blob.valueOf(JSON.serialize(t));
-                } catch (Exception e) {
-                    res.statusCode = 404;
-                    res.responseBody = Blob.valueOf('{"error":"not found"}');
-                }
-            }
+public with sharing class TemplateRest
+{
+    // =========================
+    // CREATE TEMPLATE
+    // =========================
+    @AuraEnabled
+    public static Id createTemplate(String name, String content, String format, Boolean isActive) {
+        Template__c t = new Template__c();
+        t.Name = name;
+        t.Content__c = content;
+        t.Format__c = format;
+        t.IsActive__c = isActive;
+        insert t;
+        return t.Id;
+    }
 
-            @HttpPost
-            global static void doPost() {
-                RestRequest req = RestContext.request;
-                RestResponse res = RestContext.response;
-                Map<String,Object> payload = (Map<String,Object>) JSON.deserializeUntyped(req.requestBody.toString());
-                String name = (String)payload.get('name');
-                String content = (String)payload.get('content');
-                String format = (String)payload.get('format');
-                Boolean isActive = (payload.containsKey('isActive')) ? (Boolean)payload.get('isActive') : true;
-                Id id = TemplateService.createTemplate(name, content, format, isActive);
-                res.statusCode = 201;
-                res.responseBody = Blob.valueOf('{"id":"'+String.valueOf(id)+'"}');
-            }
+    // =========================
+    // UPDATE TEMPLATE
+    // =========================
+    @AuraEnabled
+    public static Template__c updateTemplate(Id templateId, String content, String format, Boolean isActive) {
+        Template__c t = [
+            SELECT Id, Content__c, Format__c, IsActive__c 
+            FROM Template__c 
+            WHERE Id = :templateId 
+            LIMIT 1
+        ];
+        t.Content__c = content;
+        t.Format__c = format;
+        t.IsActive__c = isActive;
+        update t;
+        return t;
+    }
 
-            @HttpPut
-            global static void doPut() {
-                RestRequest req = RestContext.request;
-                RestResponse res = RestContext.response;
-                String id = req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
-                Map<String,Object> payload = (Map<String,Object>) JSON.deserializeUntyped(req.requestBody.toString());
-                String content = (String)payload.get('content');
-                String format = (String)payload.get('format');
-                Boolean isActive = (payload.containsKey('isActive')) ? (Boolean)payload.get('isActive') : true;
+    // =========================
+    // GET TEMPLATE BY ID
+    // =========================
+    @AuraEnabled(cacheable=true)
+    public static Template__c getTemplateById(Id id) {
+        return [
+            SELECT Id, Name, Content__c, Format__c, Version__c, IsActive__c 
+            FROM Template__c 
+            WHERE Id = :id 
+            LIMIT 1
+        ];
+    }
 
-                Template__c updated = TemplateService.updateTemplate(Id.valueOf(id), content, format, isActive);
-                res.statusCode = 200;
-                res.responseBody = Blob.valueOf(JSON.serialize(updated));
-            }
-
-            @HttpDelete
-            global static void doDelete() {
-                RestRequest req = RestContext.request;
-                RestResponse res = RestContext.response;
-                String id = req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);
-                TemplateService.deleteTemplate(Id.valueOf(id));
-                res.statusCode = 204;
-            }
+    // =========================
+    // LIST TEMPLATES
+    // =========================
+    @AuraEnabled(cacheable=true)
+    public static List<Template__c> listTemplates(Boolean onlyActive) {
+        if (onlyActive) {
+            return [
+                SELECT Id, Name, Format__c, Version__c, IsActive__c 
+                FROM Template__c 
+                WHERE IsActive__c = true 
+                ORDER BY Name
+            ];
+        } else {
+            return [
+                SELECT Id, Name, Format__c, Version__c, IsActive__c 
+                FROM Template__c 
+                ORDER BY Name
+            ];
         }
+    }
+
+    // =========================
+    // DELETE TEMPLATE (Soft Delete)
+    // =========================
+    @AuraEnabled
+    public static void deleteTemplate(Id id) {
+        Template__c t = new Template__c(Id = id);
+        delete t;
+    }
+
+    // =========================
+    // CREATE NEW TEMPLATE VERSION
+    // =========================
+    @AuraEnabled
+    public static Id createTemplateVersion(Id existingTemplateId, String newContent) {
+        // Load existing template
+        Template__c t = [
+            SELECT Name, Content__c, Format__c, Version__c 
+            FROM Template__c 
+            WHERE Id = :existingTemplateId 
+            LIMIT 1
+        ];
+
+        // Clone for new version
+        Template__c v = t.clone(false, true, false, false);
+        v.Content__c = newContent;
+
+        // Compute next version number safely
+        Integer nextVersion = 1;
+        try {
+            String currentVersionStr = String.valueOf(t.Version__c);
+            if (!String.isBlank(currentVersionStr) && currentVersionStr != 'null') {
+                try {
+                    nextVersion = Integer.valueOf(currentVersionStr) + 1;
+                } catch (Exception ex) {
+                    nextVersion = 1; // fallback
+                }
+            }
+        } catch (Exception e) {
+            nextVersion = 1;
+        }
+
+        // Handle Version__c field type dynamically
+        Schema.DescribeFieldResult dfr = Template__c.Version__c.getDescribe();
+        Schema.DisplayType fieldType = dfr.getType();
+
+        SObject sObj = (SObject) v;
+
+        if (
+            fieldType == Schema.DisplayType.INTEGER ||
+            fieldType == Schema.DisplayType.DOUBLE ||
+            fieldType == Schema.DisplayType.CURRENCY ||
+            fieldType == Schema.DisplayType.PERCENT
+        ) {
+            sObj.put('Version__c', nextVersion);
+        } else {
+            sObj.put('Version__c', String.valueOf(nextVersion));
+        }
+
+        insert v;
+        return v.Id;
+    }
+}

@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
     <lightning-card title="AI-Powered Document Generator" icon-name="utility:document">
         <div class="slds-var-p-around_medium">
             
@@ -294,7 +294,6 @@
                 </div>
             </template>
 
-            Navigation Buttons
             <div class="navigation-buttons slds-var-m-top_large">
                 <lightning-button
                     label="Previous"
@@ -329,7 +328,7 @@
             </template>
         </div>
     </lightning-card>
-</template>  -->
+</template> 
 
 <!-- <template>
 
@@ -1023,24 +1022,21 @@ onclick={handleCloseError}>
 </template>
 </template> -->
 
-<template>
+<!-- <template>
     <lightning-card title="AI-Powered Document Generator" icon-name="standard:document">
         <div class="slds-card__body slds-card__body_inner">
             
-            <!-- Progress Indicator -->
             <div class="slds-progress-bar slds-progress-bar_circular slds-m-bottom_large">
                 <span class="slds-progress-bar__value style={progressStyle}">
                     <span class="slds-progress-bar__value-label">{progressText}</span>
                 </span>
             </div>
 
-            <!-- Step 1: Document Configuration -->
             <template if:true={isStep1}>
                 <div class="step-container slds-box slds-theme_default">
                     <h3 class="slds-text-heading_medium slds-m-bottom_medium">Document Configuration</h3>
                     
                     <div class="slds-grid slds-gutters slds-wrap">
-                        <!-- Region Selection -->
                         <div class="slds-col slds-size_1-of-3">
                             <lightning-combobox
                                 name="region"
@@ -1054,7 +1050,6 @@ onclick={handleCloseError}>
                             </lightning-combobox>
                         </div>
 
-                        <!-- Role Selection -->
                         <div class="slds-col slds-size_1-of-3">
                             <lightning-combobox
                                 name="role"
@@ -1068,7 +1063,6 @@ onclick={handleCloseError}>
                             </lightning-combobox>
                         </div>
 
-                        <!-- Contract Type Selection -->
                         <div class="slds-col slds-size_1-of-3">
                             <lightning-combobox
                                 name="contractType"
@@ -1083,7 +1077,6 @@ onclick={handleCloseError}>
                         </div>
                     </div>
 
-                    <!-- Additional Requirements -->
                     <div class="slds-m-top_medium">
                         <lightning-textarea
                             name="additionalRequirements"
@@ -1095,7 +1088,6 @@ onclick={handleCloseError}>
                         </lightning-textarea>
                     </div>
 
-                    <!-- AI Processing Toggle -->
                     <div class="slds-m-top_medium">
                         <lightning-input
                             type="toggle"
@@ -1111,7 +1103,6 @@ onclick={handleCloseError}>
                 </div>
             </template>
 
-            <!-- Step 2: Document Generation -->
             <template if:true={isStep2}>
                 <div class="step-container slds-box slds-theme_default">
                     <h3 class="slds-text-heading_medium slds-m-bottom_medium">Document Generation</h3>
@@ -1129,7 +1120,6 @@ onclick={handleCloseError}>
                         </div>
                     </template>
 
-                    <!-- Generation Progress -->
                     <template if:true={isGenerating}>
                         <div class="generation-progress slds-text-align_center slds-m-vertical_large">
                             <lightning-spinner 
@@ -1145,7 +1135,6 @@ onclick={handleCloseError}>
                         </div>
                     </template>
 
-                    <!-- Generated Content Preview -->
                     <template if:true={generatedClause}>
                         <div class="generated-content slds-box slds-theme_shade slds-m-top_medium">
                             <h4 class="slds-text-heading_small slds-m-bottom_small">
@@ -1157,7 +1146,6 @@ onclick={handleCloseError}>
                             </div>
                         </div>
 
-                        <!-- Compliance Status -->
                         <template if:true={complianceStatus}>
                             <div class="compliance-status slds-m-top_medium">
                                 <div class={complianceStatusClass}>
@@ -1200,7 +1188,6 @@ onclick={handleCloseError}>
                 </div>
             </template>
 
-            <!-- Step 3: Signature Request -->
             <template if:true={isStep3}>
                 <div class="step-container slds-box slds-theme_default">
                     <h3 class="slds-text-heading_medium slds-m-bottom_medium">Request Signature</h3>
@@ -1240,7 +1227,6 @@ onclick={handleCloseError}>
                         </lightning-textarea>
                     </div>
 
-                    <!-- Signature Request Options -->
                     <div class="slds-m-top_medium">
                         <fieldset class="slds-form-element">
                             <legend class="slds-form-element__legend slds-form-element__label">
@@ -1259,7 +1245,6 @@ onclick={handleCloseError}>
                 </div>
             </template>
 
-            <!-- Step 4: Completion -->
             <template if:true={isStep4}>
                 <div class="step-container slds-box slds-theme_success">
                     <div class="slds-text-align_center">
@@ -1278,7 +1263,6 @@ onclick={handleCloseError}>
                             Your document has been generated and signature request has been sent successfully!
                         </p>
 
-                        <!-- Success Details -->
                         <div class="success-details slds-box slds-theme_shade slds-m-top_medium">
                             <div class="slds-grid slds-gutters slds-text-align_left">
                                 <div class="slds-col slds-size_1-of-2">
@@ -1294,7 +1278,6 @@ onclick={handleCloseError}>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
                         <div class="slds-m-top_large">
                             <lightning-button-group>
                                 <lightning-button
@@ -1321,7 +1304,6 @@ onclick={handleCloseError}>
                             </lightning-button-group>
                         </div>
 
-                        <!-- Email Notification Status -->
                         <template if:true={emailSentStatus}>
                             <div class="email-status slds-m-top_medium">
                                 <lightning-icon icon-name="utility:email" size="small" class="slds-m-right_x-small"></lightning-icon>
@@ -1332,7 +1314,6 @@ onclick={handleCloseError}>
                 </div>
             </template>
 
-            <!-- Navigation Footer -->
             <div slot="footer" class="slds-card__footer">
                 <div class="slds-grid slds-grid_align-spread">
                     <div class="slds-col">
@@ -1365,7 +1346,6 @@ onclick={handleCloseError}>
         </div>
     </lightning-card>
 
-    <!-- Error Toast Container -->
     <template if:true={showError}>
         <div class="slds-notify_container slds-is-relative">
             <div class="slds-notify slds-notify_toast slds-theme_error" role="status">
@@ -1389,4 +1369,4 @@ onclick={handleCloseError}>
             </div>
         </div>
     </template>
-</template>
+</template>-->

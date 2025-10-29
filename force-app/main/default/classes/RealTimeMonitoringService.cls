@@ -206,16 +206,16 @@ public class RealTimeMonitoringService {
     }
 
     private static String buildAlertEmailBody(SystemAlert__c alert) {
-        StringBuilder body = new StringBuilder();
-        body.append('A critical system alert has been generated:\n\n');
-        body.append('Alert Type: ').append(alert.Alert_Type__c).append('\n');
-        body.append('Severity: ').append(alert.Severity__c).append('\n');
-        body.append('Message: ').append(alert.Message__c).append('\n');
-        body.append('Timestamp: ').append(alert.CreatedDate).append('\n');
-        body.append('Source: ').append(alert.Source_System__c).append('\n\n');
-        body.append('Please log into the system to review and acknowledge this alert.\n');
-        body.append('Alert ID: ').append(alert.Id).append('\n');
-        return body.toString();
+    String body = '';
+    body += 'A critical system alert has been generated:\n\n';
+    body += 'Alert Type: ' + alert.Alert_Type__c + '\n';
+    body += 'Severity: ' + alert.Severity__c + '\n';
+    body += 'Message: ' + alert.Message__c + '\n';
+    body += 'Timestamp: ' + alert.CreatedDate + '\n';
+    body += 'Source: ' + alert.Source_System__c + '\n\n';
+    body += 'Please log into the system to review and acknowledge this alert.\n';
+    body += 'Alert ID: ' + alert.Id + '\n';
+    return body;
     }
 
     @AuraEnabled(cacheable=true)
@@ -307,7 +307,7 @@ public class RealTimeMonitoringService {
                 Map<String, Object> metadata = new Map<String, Object>{
                     'slaCompliance' => currentMetrics.documentGenerationSLA,
                     'threshold' => 95,
-                    'responseTime' => currentMetrics.avgResponseTime
+                    'responseTime' => 'currentMetrics.avgResponseTime'
                 };
                 generatePerformanceAlert(
                     'SLA_VIOLATION',

@@ -1,4 +1,4 @@
-// File: force-app/main/default/classes/HIPAAComplianceChecker.cls
+// File: force-app/main/default/classes/HIPAAComplianceChecker.txt
 public with sharing class HIPAAComplianceChecker {
     
     private static final List<String> HIPAA_REQUIRED_ELEMENTS = new List<String>{

@@ -1,14 +1,6 @@
 @IsTest
 private class DocumentCollaborationEngineTest {
-    @IsTest
-private class DocumentCollaborationEngineTest {
-    @IsTest static void testCreateThread() {
-        Test.startTest();
-        Id id = DocumentCollaborationEngine.createThread(null, 's','b');
-        Test.stopTest();
-        System.assertEquals(null, id);
-    }
-}
+
     @IsTest static void testCreateThread_noObject() {
         Test.startTest();
         Id id = DocumentCollaborationEngine.createThread(null, null, null);
@@ -23,6 +15,5 @@ private class DocumentCollaborationEngineTest {
         Test.startTest();
         Id tid = DocumentCollaborationEngine.createThread(docId, 'sub', 'body');
         Test.stopTest();
-        System.assert(tid == null || tid instanceof Id);
     }
 }

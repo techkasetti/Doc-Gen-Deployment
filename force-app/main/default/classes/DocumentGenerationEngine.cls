@@ -1,233 +1,251 @@
-public class DocumentGenerationEngine {
+public with sharing class DocumentGenerationEngine {
+    /**
+     * Generate a document from a template, merge map, and additional context data.
+     * Context data is merged into the template along with mergeData.
+     */
+    @AuraEnabled(cacheable=false)
+    public static GenerationResult generateContextAwareDocument(GenerationRequest req, Map<String, Object> contextData) {
+        GenerationResult out = new GenerationResult();
+        try {
+            if (req == null || String.isBlank(req.templateId)) {
+                out.message = 'missing templateId';
+                return out;
+            }
 
+            Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+            String templateType = null;
+            if (gd.containsKey('Document_Template__c')) templateType = 'Document_Template__c';
+            else if (gd.containsKey('DocumentTemplate__c')) templateType = 'DocumentTemplate__c';
+            else {
+                out.message = 'Template object not found in org';
+                return out;
+            }
+
+            // Build SELECT fields defensively
+            List<String> sel = new List<String>{ 'Id', 'Template_Content__c' };
+            Schema.DescribeSObjectResult descr = gd.get(templateType).getDescribe();
+            Map<String, Schema.SObjectField> fieldsMap = descr.fields.getMap();
+            if (fieldsMap.containsKey('Template_Name__c')) sel.add('Template_Name__c');
+            else if (fieldsMap.containsKey('Name')) sel.add('Name');
+            if (fieldsMap.containsKey('AI_Instructions__c')) sel.add('AI_Instructions__c');
+
+            String q = 'SELECT ' + String.join(sel, ', ') + ' FROM ' + templateType + ' WHERE Id = :req.templateId LIMIT 1';
+            SObject tmpl = Database.query(q);
+
+            String templateContent = (String)tmpl.get('Template_Content__c');
+            if (templateContent == null) templateContent = '';
+
+            // Merge contextData into template
+            if (contextData != null && !contextData.isEmpty()) {
+                for (String k : contextData.keySet()) {
+                    Object v = contextData.get(k);
+                    String sval = v == null ? '' : String.valueOf(v);
+                    templateContent = templateContent.replace('{{' + k + '}}', sval);
+                }
+            }
+
+            // Merge mergeData into template
+            if (req.mergeData != null && !req.mergeData.isEmpty()) {
+                for (String k : req.mergeData.keySet()) {
+                    Object v = req.mergeData.get(k);
+                    String sval = v == null ? '' : String.valueOf(v);
+                    templateContent = templateContent.replace('{{' + k + '}}', sval);
+                }
+            }
+
+            // Post-process & ensure HTML wrapper
+            String generated = applyPostProcessing(templateContent);
+
+            // Persist to ContentVersion (guard for orgs without ContentVersion)
+            if (!Schema.getGlobalDescribe().containsKey('ContentVersion')) {
+                out.message = 'ContentVersion object not available';
+                return out;
+            }
+
+            String title = 'generated-document';
+            if (fieldsMap.containsKey('Template_Name__c') && tmpl.get('Template_Name__c') != null) {
+                title = String.valueOf(tmpl.get('Template_Name__c'));
+            } else if (fieldsMap.containsKey('Name') && tmpl.get('Name') != null) {
+                title = String.valueOf(tmpl.get('Name'));
+            }
+
+            ContentVersion cv = new ContentVersion();
+            cv.Title = title;
+            cv.PathOnClient = title + (req.outputFormat != null && req.outputFormat.toLowerCase() == 'pdf' ? '.pdf' : '.html');
+            cv.VersionData = Blob.valueOf(generated);
+            insert cv;
+
+            out.success = true;
+            out.message = 'generated';
+            out.contentVersionId = cv.Id;
+            out.contentDocumentId = cv.ContentDocumentId;
+            out.metadata.put('length', generated.length());
+
+            // Best-effort: dynamic audit insertion (avoids compile-time coupling)
+            if (Schema.getGlobalDescribe().containsKey('Document_Generation_Audit__c')) {
+                try {
+                    SObject auditRec = Schema.getGlobalDescribe().get('Document_Generation_Audit__c').newSObject();
+                    auditRec.put('Template_Used__c', req.templateId);
+                    auditRec.put('Status__c', 'COMPLETED');
+                    auditRec.put('ContentDocumentId__c', cv.ContentDocumentId);
+                    auditRec.put('Generation_Parameters__c', JSON.serialize(req.mergeData));
+                    auditRec.put('Context_Data__c', JSON.serialize(contextData));
+                    auditRec.put('Generation_Timestamp__c', Datetime.now());
+                    insert auditRec;
+                    out.metadata.put('auditId', String.valueOf(auditRec.get('Id')));
+                } catch (Exception ex) {
+                    // non-fatal
+                    System.debug('DocumentGenerationEngine.auditInsert failed: ' + ex.getMessage());
+                }
+            }
+
+            return out;
+
+        } catch (Exception e) {
+            out.success = false;
+            out.message = 'generation error: ' + e.getMessage();
+            return out;
+        }
+    }
+
+    // Input DTO
     public class GenerationRequest {
         @AuraEnabled public String templateId;
-        @AuraEnabled public String documentType;
         @AuraEnabled public Map<String, Object> mergeData;
         @AuraEnabled public String outputFormat;
-        @AuraEnabled public Boolean includeCompliance;
-        @AuraEnabled public String jurisdiction;
-        @AuraEnabled public List<String> requiredSections;
+        @AuraEnabled public List<String> generationOptions;
+        public GenerationRequest() {
+            mergeData = new Map<String,Object>();
+            outputFormat = 'html';
+            generationOptions = new List<String>();
+        }
     }
 
+    // Output DTO
     public class GenerationResult {
         @AuraEnabled public Boolean success;
-        @AuraEnabled public String documentId;
-        @AuraEnabled public String generatedContent;
+        @AuraEnabled public String message;
+        @AuraEnabled public Id contentDocumentId;
+        @AuraEnabled public Id contentVersionId;
         @AuraEnabled public Map<String, Object> metadata;
-        @AuraEnabled public List<String> validationResults;
-        @AuraEnabled public Decimal complianceScore;
-        @AuraEnabled public String errorMessage;
-        @AuraEnabled public DateTime generationTime;
+        public GenerationResult() {
+            success = false;
+            message = null;
+            contentDocumentId = null;
+            contentVersionId = null;
+            metadata = new Map<String,Object>();
+        }
     }
 
+    /**
+     * Generate a document from a template + merge map.
+     * Defensive: checks for template object presence, ContentVersion presence, and uses dynamic audit insertion.
+     */
     @AuraEnabled(cacheable=false)
-    public static GenerationResult generateDocument(GenerationRequest request) {
-        GenerationResult result = new GenerationResult();
-        result.generationTime = DateTime.now();
-        result.metadata = new Map<String, Object>();
-        result.validationResults = new List<String>();
-
+    public static GenerationResult generateDocument(GenerationRequest req) {
+        GenerationResult out = new GenerationResult();
         try {
-            Document_Template__c template = [
-                SELECT Id, Template_Name__c, Template_Content__c, Template_Type__c, Active__c
-                FROM Document_Template__c
-                WHERE Id = :request.templateId AND Active__c = true
-                LIMIT 1
-            ];
-
-            if (template == null) {
-                result.success = false;
-                result.errorMessage = 'Template not found or inactive';
-                return result;
+            if (req == null || String.isBlank(req.templateId)) {
+                out.message = 'missing templateId';
+                return out;
             }
 
-            String baseContent = template.Template_Content__c != null ? template.Template_Content__c : '';
-            String processedContent = processMergeFields(baseContent, request.mergeData);
-
-            if (request.includeCompliance && request.jurisdiction != null) {
-                ComplianceChecker.ComplianceResult complianceResult = ComplianceChecker.validateDocumentCompliance(
-                    processedContent,
-                    request.documentType,
-                    request.jurisdiction
-                );
-                result.complianceScore = complianceResult.complianceScore;
-                result.validationResults.addAll(complianceResult.violations);
+            Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
+            String templateType = null;
+            if (gd.containsKey('Document_Template__c')) templateType = 'Document_Template__c';
+            else if (gd.containsKey('DocumentTemplate__c')) templateType = 'DocumentTemplate__c';
+            else {
+                out.message = 'Template object not found in org';
+                return out;
             }
 
-            DocumentLifecycleConfiguration__c newDocument = new DocumentLifecycleConfiguration__c(
-                Document_Name__c = 'Generated_' + template.Template_Name__c + '_' + DateTime.now().getTime(),
-                Document_Type__c = request.documentType,
-                Content__c = processedContent,
-                Template_Used__c = template.Id,
-                Status__c = 'Generated',
-                Created_Date__c = DateTime.now()
-            );
-            insert newDocument;
+            // Build SELECT fields defensively
+            List<String> sel = new List<String>{ 'Id', 'Template_Content__c' };
+            Schema.DescribeSObjectResult descr = gd.get(templateType).getDescribe();
+            Map<String, Schema.SObjectField> fieldsMap = descr.fields.getMap();
+            if (fieldsMap.containsKey('Template_Name__c')) sel.add('Template_Name__c');
+            else if (fieldsMap.containsKey('Name')) sel.add('Name');
+            if (fieldsMap.containsKey('AI_Instructions__c')) sel.add('AI_Instructions__c');
 
-            result.success = true;
-            result.documentId = newDocument.Id;
-            result.generatedContent = processedContent;
-            result.metadata.put('templateName', template.Template_Name__c);
-            result.metadata.put('templateType', template.Template_Type__c);
-            result.metadata.put('contentLength', processedContent.length());
-            result.metadata.put('mergeFieldsProcessed', countMergeFields(baseContent));
+            String q = 'SELECT ' + String.join(sel, ', ') + ' FROM ' + templateType + ' WHERE Id = :req.templateId LIMIT 1';
+            SObject tmpl = Database.query(q);
+
+            String templateContent = (String)tmpl.get('Template_Content__c');
+            if (templateContent == null) templateContent = '';
+
+            // Simple placeholder merge: {{KEY}} -> value
+            if (req.mergeData != null && !req.mergeData.isEmpty()) {
+                for (String k : req.mergeData.keySet()) {
+                    Object v = req.mergeData.get(k);
+                    String sval = v == null ? '' : String.valueOf(v);
+                    templateContent = templateContent.replace('{{' + k + '}}', sval);
+                }
+            }
+
+            // If you want to plug an AI model, add a call here; but avoid direct static references
+            // to external helper classes at compile time (we intentionally do not call any AI helpers here).
+
+            // Post-process & ensure HTML wrapper
+            String generated = applyPostProcessing(templateContent);
+
+            // Persist to ContentVersion (guard for orgs without ContentVersion)
+            if (!Schema.getGlobalDescribe().containsKey('ContentVersion')) {
+                out.message = 'ContentVersion object not available';
+                return out;
+            }
+
+            String title = 'generated-document';
+            if (fieldsMap.containsKey('Template_Name__c') && tmpl.get('Template_Name__c') != null) {
+                title = String.valueOf(tmpl.get('Template_Name__c'));
+            } else if (fieldsMap.containsKey('Name') && tmpl.get('Name') != null) {
+                title = String.valueOf(tmpl.get('Name'));
+            }
+
+            ContentVersion cv = new ContentVersion();
+            cv.Title = title;
+            cv.PathOnClient = title + (req.outputFormat != null && req.outputFormat.toLowerCase() == 'pdf' ? '.pdf' : '.html');
+            cv.VersionData = Blob.valueOf(generated);
+            insert cv;
+
+            out.success = true;
+            out.message = 'generated';
+            out.contentVersionId = cv.Id;
+            out.contentDocumentId = cv.ContentDocumentId;
+            out.metadata.put('length', generated.length());
+
+            // Best-effort: dynamic audit insertion (avoids compile-time coupling)
+            if (Schema.getGlobalDescribe().containsKey('Document_Generation_Audit__c')) {
+                try {
+                    SObject auditRec = Schema.getGlobalDescribe().get('Document_Generation_Audit__c').newSObject();
+                    auditRec.put('Template_Used__c', req.templateId);
+                    auditRec.put('Status__c', 'COMPLETED');
+                    auditRec.put('ContentDocumentId__c', cv.ContentDocumentId);
+                    auditRec.put('Generation_Parameters__c', JSON.serialize(req.mergeData));
+                    auditRec.put('Generation_Timestamp__c', Datetime.now());
+                    insert auditRec;
+                    out.metadata.put('auditId', String.valueOf(auditRec.get('Id')));
+                } catch (Exception ex) {
+                    // non-fatal
+                    System.debug('DocumentGenerationEngine.auditInsert failed: ' + ex.getMessage());
+                }
+            }
+
+            return out;
 
         } catch (Exception e) {
-            result.success = false;
-            result.errorMessage = e.getMessage();
-        }
-        return result;
-    }
-
-    private static String processMergeFields(String content, Map<String, Object> mergeData) {
-        if (mergeData == null || mergeData.isEmpty()) {
-            return content;
-        }
-        String processedContent = content;
-        for (String key : mergeData.keySet()) {
-            String placeholder = '{{' + key + '}}';
-            String value = String.valueOf(mergeData.get(key));
-            processedContent = processedContent.replace(placeholder, value);
-        }
-        return processedContent;
-    }
-
-    private static Integer countMergeFields(String content) {
-        if (String.isBlank(content)) return 0;
-        Integer count = 0;
-        Pattern mergePattern = Pattern.compile('\\{\\{[^}]+\\}\\}');
-        Matcher matcher = mergePattern.matcher(content);
-        while (matcher.find()) {
-            count++;
-        }
-        return count;
-    }
-
-    @AuraEnabled(cacheable=false)
-    public static List<GenerationResult> generateBulkDocuments(List<GenerationRequest> requests) {
-        List<GenerationResult> results = new List<GenerationResult>();
-        for (GenerationRequest request : requests) {
-            try {
-                GenerationResult result = generateDocument(request);
-                results.add(result);
-            } catch (Exception e) {
-                GenerationResult errorResult = new GenerationResult();
-                errorResult.success = false;
-                errorResult.errorMessage = 'Bulk generation error: ' + e.getMessage();
-                results.add(errorResult);
-            }
-        }
-        return results;
-    }
-
-
-    @AuraEnabled(cacheable=true)
-    public static List<Map<String, Object>> getAvailableTemplates() {
-        List<Map<String, Object>> templates = new List<Map<String, Object>>();
-        try {
-            List<Document_Template__c> templateRecords = [
-                SELECT Id, Template_Name__c, Template_Type__c, Description__c, Active__c, CreatedDate
-                FROM Document_Template__c
-                WHERE Active__c = true
-                ORDER BY Template_Name__c
-            ];
-            for (Document_Template__c template : templateRecords) {
-                templates.add(new Map<String, Object>{
-                    'id' => template.Id,
-                    'name' => template.Template_Name__c,
-                    'type' => template.Template_Type__c,
-                    'description' => template.Description__c,
-                    'active' => template.Active__c,
-                    'createdDate' => template.CreatedDate
-                });
-            }
-        } catch (Exception e) {
-            System.debug('Error retrieving templates: ' + e.getMessage());
-        }
-        return templates;
-    }
-
-    @AuraEnabled(cacheable=false)
-    public static Map<String, Object> getDocumentGenerationMetrics() {
-        Map<String, Object> metrics = new Map<String, Object>();
-        try {
-            Date thirtyDaysAgo = Date.today().addDays(-30);
-            DateTime thirtyDaysAgoDateTime = DateTime.newInstance(thirtyDaysAgo, Time.newInstance(0, 0, 0, 0));
-
-            Integer totalGenerated = [
-                SELECT COUNT() 
-                FROM DocumentLifecycleConfiguration__c 
-                WHERE CreatedDate >= :thirtyDaysAgoDateTime
-            ];
-            Integer templatesUsed = [
-                SELECT COUNT() 
-                FROM Document_Template__c 
-                WHERE Active__c = true
-            ];
-            AggregateResult[] avgMetrics = [
-                SELECT AVG(Content__c) avgLength
-                FROM DocumentLifecycleConfiguration__c
-                WHERE CreatedDate >= :thirtyDaysAgoDateTime AND Content__c != null
-            ];
-
-            metrics.put('totalDocumentsGenerated', totalGenerated);
-            metrics.put('activeTemplates', templatesUsed);
-            metrics.put('generationPeriod', '30 days');
-            metrics.put('averageProcessingTime', '2.3 seconds');
-            metrics.put('successRate', '98.7%');
-
-            if (!avgMetrics.isEmpty() && avgMetrics[0].get('avgLength') != null) {
-                metrics.put('averageContentLength', ((Decimal)avgMetrics[0].get('avgLength')).intValue());
-            } else {
-                metrics.put('averageContentLength', 0);
-            }
-
-            Map<String, Integer> documentTypes = new Map<String, Integer>();
-            List<AggregateResult> typeDistribution = [
-                SELECT Document_Type__c docType, COUNT(Id) docCount
-                FROM DocumentLifecycleConfiguration__c
-                WHERE CreatedDate >= :thirtyDaysAgoDateTime
-                GROUP BY Document_Type__c
-            ];
-            for (AggregateResult ar : typeDistribution) {
-                String docType = (String)ar.get('docType');
-                Integer docCount = (Integer)ar.get('docCount');
-                documentTypes.put(docType != null ? docType : 'Unknown', docCount);
-            }
-            metrics.put('documentTypeDistribution', documentTypes);
-
-        } catch (Exception e) {
-            metrics.put('error', e.getMessage());
-        }
-        return metrics;
-    }
-
-    @AuraEnabled(cacheable=false)
-    public static Boolean validateTemplateIntegrity(String templateId) {
-        try {
-            Document_Template__c template = [
-                SELECT Id, Template_Content__c, Template_Type__c
-                FROM Document_Template__c
-                WHERE Id = :templateId
-                LIMIT 1
-            ];
-            if (template == null) return false;
-
-            String content = template.Template_Content__c;
-            if (String.isBlank(content)) return false;
-
-            Pattern mergePattern = Pattern.compile('\\{\\{[^}]+\\}\\}');
-            Matcher matcher = mergePattern.matcher(content);
-
-            Boolean hasValidMergeFields = matcher.find();
-            Boolean hasValidStructure = content.length() > 50;
-
-            return hasValidMergeFields && hasValidStructure;
-
-        } catch (Exception e) {
-            System.debug('Template validation error: ' + e.getMessage());
-            return false;
+            out.success = false;
+            out.message = 'generation error: ' + e.getMessage();
+            return out;
         }
     }
+
+    // Minimal post-processing to ensure produced HTML is wrapped  
+    private static String applyPostProcessing(String content) {
+        if (String.isBlank(content)) content = '<html><body></body></html>';
+        if (!content.toLowerCase().contains('<html')) {
+            content = '<html><body>' + content + '</body></html>';
+        }
+        return content;
+    }
+
 }

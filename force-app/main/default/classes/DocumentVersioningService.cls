@@ -51,17 +51,17 @@ public class DocumentVersioningService {
             Integer nextVersionNumber = getNextVersionNumber(documentId);
             
             // Create version record
-            Document_Version__c version = new Document_Version__c(
-                Document_Id__c = documentId,
-                Version_Number__c = nextVersionNumber,
-                Version_Label__c = 'v' + nextVersionNumber + '.0',
-                Content__c = content,
-                Status__c = 'Draft',
-                Change_Description__c = changeDescription,
-                Created_By__c = UserInfo.getUserId(),
-                Created_Date__c = DateTime.now(),
-                Is_Current__c = false
-            );
+            Document_Version__c version = new Document_Version__c();
+                version.Document_Id__c = documentId;
+                version.Version_Number__c = nextVersionNumber;
+                version.Version_Label__c = 'v' + nextVersionNumber + '.0';
+                version.Content__c = content;
+                version.Status__c = 'Draft';
+                version.Change_Description__c = changeDescription;
+                version.Created_By__c = UserInfo.getUserId();
+                version.Created_Date__c = DateTime.now();
+                version.Is_Current__c = false;
+           
             
             insert version;
             

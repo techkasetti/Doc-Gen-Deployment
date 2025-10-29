@@ -6,58 +6,58 @@ public class DocumentArchivalManager {
         List<DocumentRetentionPolicy__c> policies = new List<DocumentRetentionPolicy__c>();
         
         // GDPR-compliant retention policy
-        policies.add(new DocumentRetentionPolicy__c(
-            Policy_Name__c = 'GDPR_Personal_Data_Retention',
-            Document_Type__c = 'DATA_PROCESSING_AGREEMENT',
-            Retention_Period_Years__c = 7,
-            Retention_Period_Days__c = 2555, // 7 years
-            Geographic_Scope__c = 'EU;EEA',
-            Legal_Basis__c = 'GDPR Article 17 - Right to Erasure',
-            Auto_Delete_Enabled__c = true,
-            Pre_Deletion_Review__c = true,
-            Deletion_Approval_Required__c = true,
-            Archive_Before_Deletion__c = true,
-            Archive_Location__c = 'SECURE_CLOUD_ARCHIVE',
-            Encryption_Required__c = true,
-            Access_Log_Required__c = true,
-            Compliance_Officer_Notification__c = true
-        ));
+        DocumentRetentionPolicy__c gdprPolicy = new DocumentRetentionPolicy__c();
+        gdprPolicy.Policy_Name__c = 'GDPR_Personal_Data_Retention';
+        gdprPolicy.Document_Type__c = 'DATA_PROCESSING_AGREEMENT';
+        gdprPolicy.Retention_Period_Years__c = 7;
+        gdprPolicy.Retention_Period_Days__c = 2555;
+        gdprPolicy.Geographic_Scope__c = 'EU;EEA';
+        gdprPolicy.Legal_Basis__c = 'GDPR Article 17 - Right to Erasure';
+        gdprPolicy.Auto_Delete_Enabled__c = true;
+        gdprPolicy.Pre_Deletion_Review__c = true;
+        gdprPolicy.Deletion_Approval_Required__c = true;
+        gdprPolicy.Archive_Before_Deletion__c = true;
+        gdprPolicy.Archive_Location__c = 'SECURE_CLOUD_ARCHIVE';
+        gdprPolicy.Encryption_Required__c = true;
+        gdprPolicy.Access_Log_Required__c = true;
+        gdprPolicy.Compliance_Officer_Notification__c = true;
+        policies.add(gdprPolicy);
         
         // Financial records retention
-        policies.add(new DocumentRetentionPolicy__c(
-            Policy_Name__c = 'Financial_Records_Retention_US',
-            Document_Type__c = 'FINANCIAL_CONTRACT',
-            Retention_Period_Years__c = 10,
-            Retention_Period_Days__c = 3650,
-            Geographic_Scope__c = 'US',
-            Legal_Basis__c = 'SOX Compliance - 15 USC 7213',
-            Auto_Delete_Enabled__c = false, // Manual review required
-            Pre_Deletion_Review__c = true,
-            Deletion_Approval_Required__c = true,
-            Archive_Before_Deletion__c = true,
-            Archive_Location__c = 'IMMUTABLE_BLOCKCHAIN_STORAGE',
-            Encryption_Required__c = true,
-            Access_Log_Required__c = true,
-            Audit_Trail_Permanent__c = true
-        ));
+        DocumentRetentionPolicy__c finPolicy = new DocumentRetentionPolicy__c();
+        finPolicy.Policy_Name__c = 'Financial_Records_Retention_US';
+        finPolicy.Document_Type__c = 'FINANCIAL_CONTRACT';
+        finPolicy.Retention_Period_Years__c = 10;
+        finPolicy.Retention_Period_Days__c = 3650;
+        finPolicy.Geographic_Scope__c = 'US';
+        finPolicy.Legal_Basis__c = 'SOX Compliance - 15 USC 7213';
+        finPolicy.Auto_Delete_Enabled__c = false;
+        finPolicy.Pre_Deletion_Review__c = true;
+        finPolicy.Deletion_Approval_Required__c = true;
+        finPolicy.Archive_Before_Deletion__c = true;
+        finPolicy.Archive_Location__c = 'IMMUTABLE_BLOCKCHAIN_STORAGE';
+        finPolicy.Encryption_Required__c = true;
+        finPolicy.Access_Log_Required__c = true;
+        finPolicy.Audit_Trail_Permanent__c = true;
+        policies.add(finPolicy);
         
         // Healthcare records retention (HIPAA)
-        policies.add(new DocumentRetentionPolicy__c(
-            Policy_Name__c = 'HIPAA_PHI_Retention_Policy',
-            Document_Type__c = 'HEALTHCARE_AGREEMENT',
-            Retention_Period_Years__c = 6,
-            Retention_Period_Days__c = 2190,
-            Geographic_Scope__c = 'US',
-            Legal_Basis__c = 'HIPAA 45 CFR 164.530(j)(2)',
-            Auto_Delete_Enabled__c = false,
-            Pre_Deletion_Review__c = true,
-            Deletion_Approval_Required__c = true,
-            Archive_Before_Deletion__c = true,
-            Archive_Location__c = 'HIPAA_COMPLIANT_ARCHIVE',
-            Encryption_Required__c = true,
-            PHI_Anonymization_Required__c = true,
-            Access_Log_Required__c = true
-        ));
+        DocumentRetentionPolicy__c hipaaPolicy = new DocumentRetentionPolicy__c();
+        hipaaPolicy.Policy_Name__c = 'HIPAA_PHI_Retention_Policy';
+        hipaaPolicy.Document_Type__c = 'HEALTHCARE_AGREEMENT';
+        hipaaPolicy.Retention_Period_Years__c = 6;
+        hipaaPolicy.Retention_Period_Days__c = 2190;
+        hipaaPolicy.Geographic_Scope__c = 'US';
+        hipaaPolicy.Legal_Basis__c = 'HIPAA 45 CFR 164.530(j)(2)';
+        hipaaPolicy.Auto_Delete_Enabled__c = false;
+        hipaaPolicy.Pre_Deletion_Review__c = true;
+        hipaaPolicy.Deletion_Approval_Required__c = true;
+        hipaaPolicy.Archive_Before_Deletion__c = true;
+        hipaaPolicy.Archive_Location__c = 'HIPAA_COMPLIANT_ARCHIVE';
+        hipaaPolicy.Encryption_Required__c = true;
+        hipaaPolicy.PHI_Anonymization_Required__c = true;
+        hipaaPolicy.Access_Log_Required__c = true;
+        policies.add(hipaaPolicy);
         
         insert policies;
         
@@ -118,7 +118,6 @@ public class DocumentArchivalManager {
                 Document_Title__c = doc.Title,
                 Original_Creation_Date__c = doc.CreatedDate,
                 Archival_Date__c = Date.today(),
-                Retention_Policy__c = policy.Id,
                 Archive_Location__c = policy.Archive_Location__c,
                 File_Size_MB__c = (doc.ContentSize / 1024.0 / 1024.0),
                 Encryption_Applied__c = policy.Encryption_Required__c,
@@ -149,25 +148,16 @@ public class DocumentArchivalManager {
         updateRetentionScheduleStats(policyId, archivalRecords.size());
     }
     
-    // private static Boolean checkLegalHoldStatus(String documentId) {
-    //     Integer holdCount = [
-    //         SELECT COUNT() 
-    //         FROM LegalHold__c 
-    //         WHERE Status__c = 'ACTIVE' 
-    //         AND Document_Scope__c INCLUDES :documentId
-    //     ];
-    //     return holdCount > 0;
-    // }
     private static Boolean checkLegalHoldStatus(String documentId) {
-    Integer holdCount = [
-        SELECT COUNT() 
-        FROM LegalHold__c 
-        WHERE Status__c = 'ACTIVE' 
-        AND Document_Scope__c INCLUDES (:documentId)
-    ];
-    return holdCount > 0;
-}
-
+        Integer holdCount = [
+            SELECT COUNT()
+            FROM LegalHold__c
+            WHERE Status__c = 'ACTIVE'
+            AND Document_Scope__c = :documentId
+        ];
+        return holdCount > 0;
+    }
+    
     private static void archiveDocument(ContentDocument doc, DocumentRetentionPolicy__c policy) {
         // Archive to specified location with encryption
         ArchiveService.archiveDocument(doc.Id, policy.Archive_Location__c, policy.Encryption_Required__c);
@@ -186,18 +176,18 @@ public class DocumentArchivalManager {
     
     private static void updateRetentionScheduleStats(String policyId, Integer processedCount) {
         DocumentRetentionSchedule__c schedule = [
-                    SELECT Id, Documents_Processed_Last_Run__c, Last_Execution_Date__c,
-               Documents_Archived_Last_Run__c, Next_Execution_Date__c
-        FROM DocumentRetentionSchedule__c 
-        WHERE Retention_Policy__c = :policyId 
-        LIMIT 1
-    ];
-    
-    schedule.Documents_Processed_Last_Run__c = processedCount;
-    schedule.Last_Execution_Date__c = Date.today();
-    schedule.Next_Execution_Date__c = Date.today().addDays(30);
-    schedule.Documents_Archived_Last_Run__c = processedCount;
-    
-    update schedule;
-}
+            SELECT Id, Documents_Processed_Last_Run__c, Last_Execution_Date__c,
+                   Documents_Archived_Last_Run__c, Next_Execution_Date__c
+            FROM DocumentRetentionSchedule__c 
+            WHERE Retention_Policy__c = :policyId 
+            LIMIT 1
+        ];
+        
+        schedule.Documents_Processed_Last_Run__c = processedCount;
+        schedule.Last_Execution_Date__c = Date.today();
+        schedule.Next_Execution_Date__c = Date.today().addDays(30);
+        schedule.Documents_Archived_Last_Run__c = processedCount;
+        
+        update schedule;
+    }
 }

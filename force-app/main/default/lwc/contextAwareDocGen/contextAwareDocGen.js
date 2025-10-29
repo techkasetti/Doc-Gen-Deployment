@@ -1,664 +1,652 @@
-// version v1
-// import { LightningElement, track, wire, api } from 'lwc';
-// import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-// import getAIModels from '@salesforce/apex/ContextAwareDocGenController.getAIModels';
-// import analyzeFolderForGeneration from '@salesforce/apex/ContextAwareDocGenController.analyzeFolderForGeneration';
-// import generateDocumentWithContext from '@salesforce/apex/ContextAwareDocGenController.generateDocumentWithContext';
-// import previewContextGeneration from '@salesforce/apex/ContextAwareDocGenController.previewContextGeneration';
+import { LightningElement, track, wire, api } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import getAIModels from '@salesforce/apex/ContextAwareDocGenController.getAIModels';
+import analyzeFolderForGeneration from '@salesforce/apex/ContextAwareDocGenController.analyzeFolderForGeneration';
+import generateDocumentWithContext from '@salesforce/apex/ContextAwareDocGenController.generateDocumentWithContext';
+import previewContextGeneration from '@salesforce/apex/ContextAwareDocGenController.previewContextGeneration';
 
-// export default class ContextAwareDocGen extends LightningElement {
-//     // Public API properties
-//     @api folderId;
+export default class ContextAwareDocGen extends LightningElement {
+    // Public API properties
+    @api folderId;
 
-//     // Tracked properties for reactive UI
-//     @track selectedAIModel = '';
-//     @track aiModels = [];
-//     @track folderAnalysis = null;
-//     @track isAnalyzing = false;
-//     @track isGenerating = false;
-//     @track generatedContent = '';
-//     @track previewContent = '';
-//     @track showPreview = false;
+    // Tracked properties for reactive UI
+    @track selectedAIModel = '';
+    @track aiModels = [];
+    @track folderAnalysis = null;
+    @track isAnalyzing = false;
+    @track isGenerating = false;
+    @track generatedContent = '';
+    @track previewContent = '';
+    @track showPreview = false;
 
-//     // Generation parameters configuration
-//     @track generationParameters = {
-//         includeExecutiveSummary: false,
-//         includeCompliance: false,
-//         tone: 'professional',
-//         audience: 'general',
-//         outputFormat: 'document'
-//     };
+    // Generation parameters configuration
+    @track generationParameters = {
+        includeExecutiveSummary: false,
+        includeCompliance: false,
+        tone: 'professional',
+        audience: 'general',
+        outputFormat: 'document'
+    };
 
-//     // Template selection properties
-//     @track selectedTemplate = '';
-//     @track availableTemplates = [];
+    // Template selection properties
+    @track selectedTemplate = '';
+    @track availableTemplates = [];
 
-//     /**
-//      * Component initialization
-//      */
-//     connectedCallback() {
-//         this.loadAIModels();
-//         this.loadAvailableTemplates();
-//     }
+    /**
+     * Component initialization
+     */
+    connectedCallback() {
+        this.loadAIModels();
+        this.loadAvailableTemplates();
+    }
 
-//     /**
-//      * Load available AI models for dropdown selection
-//      * Maps model data to UI-friendly format with labels and capabilities
-//      */
-//     loadAIModels() {
-//         getAIModels()
-//             .then(result => {
-//                 this.aiModels = result.map(model => ({
-//                     label: `${model.modelName} (${model.provider})`,
-//                     value: model.modelId,
-//                     capabilities: model.capabilities
-//                 }));
+    /**
+     * Load available AI models for dropdown selection
+     * Maps model data to UI-friendly format with labels and capabilities
+     */
+    loadAIModels() {
+        getAIModels()
+            .then(result => {
+                this.aiModels = result.map(model => ({
+                    label: `${model.modelName} (${model.provider})`,
+                    value: model.modelId,
+                    capabilities: model.capabilities
+                }));
 
-//                 // Set default model if available
-//                 if (this.aiModels.length > 0) {
-//                     this.selectedAIModel = this.aiModels[0].value;
-//                 }
-//             })
-//             .catch(error => {
-//                 this.showToast(
-//                     'Error',
-//                     'Failed to load AI models: ' + error.body.message,
-//                     'error'
-//                 );
-//             });
-//     }
+                // Set default model if available
+                if (this.aiModels.length > 0) {
+                    this.selectedAIModel = this.aiModels[0].value;
+                }
+            })
+            .catch(error => {
+                this.showToast(
+                    'Error',
+                    'Failed to load AI models: ' + error.body.message,
+                    'error'
+                );
+            });
+    }
 
-//     /**
-//      * Load available document templates
-//      * TODO: Implement template loading from Apex controller
-//      */
-//     loadAvailableTemplates() {
-//         // Implementation to load templates
-//         // This would call an Apex method to get available templates
-//     }
+    /**
+     * Load available document templates
+     * TODO: Implement template loading from Apex controller
+     */
+    loadAvailableTemplates() {
+        // Implementation to load templates
+        // This would call an Apex method to get available templates
+    }
 
-//     /**
-//      * Handle AI model selection change event
-//      * @param {Event} event - Selection change event
-//      */
-//     handleAIModelChange(event) {
-//         this.selectedAIModel = event.detail.value;
+    /**
+     * Handle AI model selection change event
+     * @param {Event} event - Selection change event
+     */
+    handleAIModelChange(event) {
+        this.selectedAIModel = event.detail.value;
         
-//         const selectedModelLabel = event.target.options
-//             .find(opt => opt.value === this.selectedAIModel)?.label;
+        const selectedModelLabel = event.target.options
+            .find(opt => opt.value === this.selectedAIModel)?.label;
         
-//         this.showToast(
-//             'Info',
-//             `Selected AI Model: ${selectedModelLabel}`,
-//             'info'
-//         );
+        this.showToast(
+            'Info',
+            `Selected AI Model: ${selectedModelLabel}`,
+            'info'
+        );
 
-//         // Re-analyze folder with new model if folder is already selected
-//         if (this.folderId && this.selectedAIModel) {
-//             this.analyzeFolderContext();
-//         }
-//     }
+        // Re-analyze folder with new model if folder is already selected
+        if (this.folderId && this.selectedAIModel) {
+            this.analyzeFolderContext();
+        }
+    }
 
-//     /**
-//      * Analyze folder context using selected AI model
-//      * Performs document analysis and extracts themes and suggestions
-//      */
-//     analyzeFolderContext() {
-//         if (!this.folderId || !this.selectedAIModel) {
-//             this.showToast(
-//                 'Warning',
-//                 'Please select both a folder and AI model',
-//                 'warning'
-//             );
-//             return;
-//         }
+    /**
+     * Analyze folder context using selected AI model
+     * Performs document analysis and extracts themes and suggestions
+     */
+    analyzeFolderContext() {
+        if (!this.folderId || !this.selectedAIModel) {
+            this.showToast(
+                'Warning',
+                'Please select both a folder and AI model',
+                'warning'
+            );
+            return;
+        }
 
-//         this.isAnalyzing = true;
+        this.isAnalyzing = true;
         
-//         analyzeFolderForGeneration({
-//             folderId: this.folderId,
-//             selectedAIModel: this.selectedAIModel
-//         })
-//             .then(result => {
-//                 this.folderAnalysis = result;
-//                 this.showAnalysisResults();
-//             })
-//             .catch(error => {
-//                 this.showToast(
-//                     'Error',
-//                     'Failed to analyze folder: ' + error.body.message,
-//                     'error'
-//                 );
-//             })
-//             .finally(() => {
-//                 this.isAnalyzing = false;
-//             });
-//     }
+        analyzeFolderForGeneration({
+            folderId: this.folderId,
+            selectedAIModel: this.selectedAIModel
+        })
+            .then(result => {
+                this.folderAnalysis = result;
+                this.showAnalysisResults();
+            })
+            .catch(error => {
+                this.showToast(
+                    'Error',
+                    'Failed to analyze folder: ' + error.body.message,
+                    'error'
+                );
+            })
+            .finally(() => {
+                this.isAnalyzing = false;
+            });
+    }
 
-//     /**
-//      * Display folder analysis results to user
-//      * Shows summary of documents, themes, and template suggestions
-//      */
-//     showAnalysisResults() {
-//         if (!this.folderAnalysis) return;
+    /**
+     * Display folder analysis results to user
+     * Shows summary of documents, themes, and template suggestions
+     */
+    showAnalysisResults() {
+        if (!this.folderAnalysis) return;
 
-//         const {
-//             documents,
-//             commonThemes,
-//             suggestedTemplates
-//         } = this.folderAnalysis;
+        const {
+            documents,
+            commonThemes,
+            suggestedTemplates
+        } = this.folderAnalysis;
 
-//         const message = `Analyzed ${documents.length} documents. ` +
-//             `Found ${commonThemes.length} common themes. ` +
-//             `Suggested ${suggestedTemplates.length} templates.`;
+        const message = `Analyzed ${documents.length} documents. ` +
+            `Found ${commonThemes.length} common themes. ` +
+            `Suggested ${suggestedTemplates.length} templates.`;
 
-//         this.showToast('Success', message, 'success');
-//     }
+        this.showToast('Success', message, 'success');
+    }
 
-//     /**
-//      * Handle changes to generation parameters
-//      * @param {Event} event - Input change event
-//      */
-//     handleParameterChange(event) {
-//         const field = event.target.dataset.field;
-//         const value = event.target.type === 'checkbox' 
-//             ? event.target.checked 
-//             : event.target.value;
+    /**
+     * Handle changes to generation parameters
+     * @param {Event} event - Input change event
+     */
+    handleParameterChange(event) {
+        const field = event.target.dataset.field;
+        const value = event.target.type === 'checkbox' 
+            ? event.target.checked 
+            : event.target.value;
         
-//         this.generationParameters[field] = value;
-//     }
+        this.generationParameters[field] = value;
+    }
 
-//     /**
-//      * Generate document preview using current settings
-//      * Provides a quick preview before full generation
-//      */
-//     generatePreview() {
-//         if (!this.validateInputs()) return;
+    /**
+     * Generate document preview using current settings
+     * Provides a quick preview before full generation
+     */
+    generatePreview() {
+        if (!this.validateInputs()) return;
 
-//         this.isGenerating = true;
+        this.isGenerating = true;
         
-//         previewContextGeneration({
-//             folderId: this.folderId,
-//             templateId: this.selectedTemplate,
-//             selectedAIModel: this.selectedAIModel,
-//             parameters: this.generationParameters
-//         })
-//             .then(result => {
-//                 this.previewContent = result.previewText;
-//                 this.showPreview = true;
-//             })
-//             .catch(error => {
-//                 this.showToast(
-//                     'Error',
-//                     'Failed to generate preview: ' + error.body.message,
-//                     'error'
-//                 );
-//             })
-//             .finally(() => {
-//                 this.isGenerating = false;
-//             });
-//     }
+        previewContextGeneration({
+            folderId: this.folderId,
+            templateId: this.selectedTemplate,
+            selectedAIModel: this.selectedAIModel,
+            parameters: this.generationParameters
+        })
+            .then(result => {
+                this.previewContent = result.previewText;
+                this.showPreview = true;
+            })
+            .catch(error => {
+                this.showToast(
+                    'Error',
+                    'Failed to generate preview: ' + error.body.message,
+                    'error'
+                );
+            })
+            .finally(() => {
+                this.isGenerating = false;
+            });
+    }
 
-//     /**
-//      * Generate full document with context-aware AI
-//      * Creates complete document based on folder analysis and parameters
-//      */
-//     generateDocument() {
-//         if (!this.validateInputs()) return;
+    /**
+     * Generate full document with context-aware AI
+     * Creates complete document based on folder analysis and parameters
+     */
+    generateDocument() {
+        if (!this.validateInputs()) return;
 
-//         this.isGenerating = true;
+        this.isGenerating = true;
         
-//         generateDocumentWithContext({
-//             folderId: this.folderId,
-//             templateId: this.selectedTemplate,
-//             selectedAIModel: this.selectedAIModel,
-//             generationParameters: this.generationParameters
-//         })
-//             .then(result => {
-//                 this.generatedContent = result;
-//                 this.showToast(
-//                     'Success',
-//                     'Document generated successfully with contextual AI intelligence',
-//                     'success'
-//                 );
-//                 this.showGeneratedDocument();
-//             })
-//             .catch(error => {
-//                 this.showToast(
-//                     'Error',
-//                     'Failed to generate document: ' + error.body.message,
-//                     'error'
-//                 );
-//             })
-//             .finally(() => {
-//                 this.isGenerating = false;
-//             });
-//     }
+        generateDocumentWithContext({
+            folderId: this.folderId,
+            templateId: this.selectedTemplate,
+            selectedAIModel: this.selectedAIModel,
+            generationParameters: this.generationParameters
+        })
+            .then(result => {
+                this.generatedContent = result;
+                this.showToast(
+                    'Success',
+                    'Document generated successfully with contextual AI intelligence',
+                    'success'
+                );
+                this.showGeneratedDocument();
+            })
+            .catch(error => {
+                this.showToast(
+                    'Error',
+                    'Failed to generate document: ' + error.body.message,
+                    'error'
+                );
+            })
+            .finally(() => {
+                this.isGenerating = false;
+            });
+    }
 
-//     /**
-//      * Validate required inputs before generation
-//      * @returns {boolean} True if all required inputs are valid
-//      */
-//     validateInputs() {
-//         const validations = [
-//             {
-//                 condition: !this.folderId,
-//                 message: 'Please select a folder'
-//             },
-//             {
-//                 condition: !this.selectedAIModel,
-//                 message: 'Please select an AI model'
-//             },
-//             {
-//                 condition: !this.selectedTemplate,
-//                 message: 'Please select a document template'
-//             }
-//         ];
+    /**
+     * Validate required inputs before generation
+     * @returns {boolean} True if all required inputs are valid
+     */
+    validateInputs() {
+        const validations = [
+            {
+                condition: !this.folderId,
+                message: 'Please select a folder'
+            },
+            {
+                condition: !this.selectedAIModel,
+                message: 'Please select an AI model'
+            },
+            {
+                condition: !this.selectedTemplate,
+                message: 'Please select a document template'
+            }
+        ];
 
-//         for (const validation of validations) {
-//             if (validation.condition) {
-//                 this.showToast('Warning', validation.message, 'warning');
-//                 return false;
-//             }
-//         }
+        for (const validation of validations) {
+            if (validation.condition) {
+                this.showToast('Warning', validation.message, 'warning');
+                return false;
+            }
+        }
 
-//         return true;
-//     }
+        return true;
+    }
 
-//     /**
-//      * Display generated document to user
-//      * TODO: Implement document display logic
-//      * This could open a modal, navigate to a new page, or update the UI
-//      */
-//     showGeneratedDocument() {
-//         // Implementation to display the generated document
-//         // This could open a modal, navigate to a new page, or update the UI
-//     }
+    /**
+     * Display generated document to user
+     * TODO: Implement document display logic
+     * This could open a modal, navigate to a new page, or update the UI
+     */
+    showGeneratedDocument() {
+        // Implementation to display the generated document
+        // This could open a modal, navigate to a new page, or update the UI
+    }
 
-//     /**
-//      * Show toast notification to user
-//      * @param {string} title - Toast title
-//      * @param {string} message - Toast message
-//      * @param {string} variant - Toast variant (success, error, warning, info)
-//      */
-//     showToast(title, message, variant) {
-//         const event = new ShowToastEvent({
-//             title,
-//             message,
-//             variant
-//         });
-//         this.dispatchEvent(event);
-//     }
+    /**
+     * Show toast notification to user
+     * @param {string} title - Toast title
+     * @param {string} message - Toast message
+     * @param {string} variant - Toast variant (success, error, warning, info)
+     */
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title,
+            message,
+            variant
+        });
+        this.dispatchEvent(event);
+    }
 
-//     // Computed properties for UI state management
+    // Computed properties for UI state management
 
-//     /**
-//      * Check if folder analysis is complete
-//      * @returns {boolean} True if analysis has been performed
-//      */
-//     get isAnalysisComplete() {
-//         return this.folderAnalysis !== null;
-//     }
+    /**
+     * Check if folder analysis is complete
+     * @returns {boolean} True if analysis has been performed
+     */
+    get isAnalysisComplete() {
+        return this.folderAnalysis !== null;
+    }
 
-//     /**
-//      * Check if preview can be generated
-//      * @returns {boolean} True if all required fields are selected
-//      */
-//     get canGeneratePreview() {
-//         return this.selectedAIModel && 
-//                this.selectedTemplate && 
-//                this.folderId;
-//     }
+    /**
+     * Check if preview can be generated
+     * @returns {boolean} True if all required fields are selected
+     */
+    get canGeneratePreview() {
+        return this.selectedAIModel && 
+               this.selectedTemplate && 
+               this.folderId;
+    }
 
-//     /**
-//      * Get current analysis status text for UI
-//      * @returns {string} Status message
-//      */
-//     get analysisStatusText() {
-//         if (this.isAnalyzing) {
-//             return `Analyzing folder content with ${this.getSelectedModelName()}...`;
-//         }
+    /**
+     * Get current analysis status text for UI
+     * @returns {string} Status message
+     */
+    get analysisStatusText() {
+        if (this.isAnalyzing) {
+            return `Analyzing folder content with ${this.getSelectedModelName()}...`;
+        }
         
-//         if (this.folderAnalysis) {
-//             return `Analysis complete using ${this.getSelectedModelName()}`;
-//         }
+        if (this.folderAnalysis) {
+            return `Analysis complete using ${this.getSelectedModelName()}`;
+        }
         
-//         return 'No analysis performed';
-//     }
+        return 'No analysis performed';
+    }
 
-//     /**
-//      * Get the display name of the currently selected AI model
-//      * @returns {string} Model display name or 'Unknown Model'
-//      */
-//     getSelectedModelName() {
-//         const model = this.aiModels.find(m => m.value === this.selectedAIModel);
-//         return model ? model.label : 'Unknown Model';
-//     }
-// 
-// Public properties
-// @api folderId;
-// @api folderAnalysis;
+    /**
+     * Get the display name of the currently selected AI model
+     * @returns {string} Model display name or 'Unknown Model'
+     */
+    getSelectedModelName() {
+        const model = this.aiModels.find(m => m.value === this.selectedAIModel);
+        return model ? model.label : 'Unknown Model';
+    }
 
-// // Tracked properties
-// @track selectedTemplate;
-// @track selectedAIModel;
-// @track generationParameters = {};
-// @track generatedContent;
-// @track isGenerating = false;
+/**
+ * Tone options for document generation
+ * @returns {Array} Array of tone options with labels and values
+ */
+get toneOptions() {
+    return [
+        { label: 'Professional', value: 'professional' },
+        { label: 'Formal', value: 'formal' },
+        { label: 'Conversational', value: 'conversational' },
+        { label: 'Technical', value: 'technical' },
+        { label: 'Academic', value: 'academic' },
+        { label: 'Executive', value: 'executive' },
+        { label: 'Legal', value: 'legal' },
+        { label: 'Creative', value: 'creative' },
+        { label: 'Persuasive', value: 'persuasive' },
+        { label: 'Informative', value: 'informative' }
+    ];
+}
 
-// /**
-//  * Tone options for document generation
-//  * @returns {Array} Array of tone options with labels and values
-//  */
-// get toneOptions() {
-//     return [
-//         { label: 'Professional', value: 'professional' },
-//         { label: 'Formal', value: 'formal' },
-//         { label: 'Conversational', value: 'conversational' },
-//         { label: 'Technical', value: 'technical' },
-//         { label: 'Academic', value: 'academic' },
-//         { label: 'Executive', value: 'executive' },
-//         { label: 'Legal', value: 'legal' },
-//         { label: 'Creative', value: 'creative' },
-//         { label: 'Persuasive', value: 'persuasive' },
-//         { label: 'Informative', value: 'informative' }
-//     ];
-// }
+/**
+ * Audience options for document generation
+ * @returns {Array} Array of audience options with labels and values
+ */
+get audienceOptions() {
+    return [
+        { label: 'General', value: 'general' },
+        { label: 'Executive Leadership', value: 'executive' },
+        { label: 'Technical Team', value: 'technical' },
+        { label: 'Legal Department', value: 'legal' },
+        { label: 'Clients/Customers', value: 'clients' },
+        { label: 'Stakeholders', value: 'stakeholders' },
+        { label: 'Regulatory Bodies', value: 'regulatory' },
+        { label: 'Academic Audience', value: 'academic' },
+        { label: 'Internal Teams', value: 'internal' },
+        { label: 'External Partners', value: 'partners' }
+    ];
+}
 
-// /**
-//  * Audience options for document generation
-//  * @returns {Array} Array of audience options with labels and values
-//  */
-// get audienceOptions() {
-//     return [
-//         { label: 'General', value: 'general' },
-//         { label: 'Executive Leadership', value: 'executive' },
-//         { label: 'Technical Team', value: 'technical' },
-//         { label: 'Legal Department', value: 'legal' },
-//         { label: 'Clients/Customers', value: 'clients' },
-//         { label: 'Stakeholders', value: 'stakeholders' },
-//         { label: 'Regulatory Bodies', value: 'regulatory' },
-//         { label: 'Academic Audience', value: 'academic' },
-//         { label: 'Internal Teams', value: 'internal' },
-//         { label: 'External Partners', value: 'partners' }
-//     ];
-// }
+/**
+ * Get generation status text for UI display
+ * @returns {string} Status text for current generation state
+ */
+get generationStatusText() {
+    if (this.isGenerating) {
+        const modelName = this.getSelectedModelName();
+        const tone = this.generationParameters.tone;
+        return `Generating document using ${modelName} with ${tone} tone...`;
+    }
+    return '';
+}
 
-// /**
-//  * Get generation status text for UI display
-//  * @returns {string} Status text for current generation state
-//  */
-// get generationStatusText() {
-//     if (this.isGenerating) {
-//         const modelName = this.getSelectedModelName();
-//         const tone = this.generationParameters.tone;
-//         return `Generating document using ${modelName} with ${tone} tone...`;
-//     }
-//     return '';
-// }
+/**
+ * Get context quality indicator based on folder analysis
+ * @returns {string} Quality indicator text
+ */
+get contextQualityIndicator() {
+    if (!this.folderAnalysis) {
+        return 'No Analysis';
+    }
 
-// /**
-//  * Get context quality indicator based on folder analysis
-//  * @returns {string} Quality indicator text
-//  */
-// get contextQualityIndicator() {
-//     if (!this.folderAnalysis) {
-//         return 'No Analysis';
-//     }
+    const docCount = this.folderAnalysis.documents.length;
+    const themeCount = this.folderAnalysis.commonThemes.length;
 
-//     const docCount = this.folderAnalysis.documents.length;
-//     const themeCount = this.folderAnalysis.commonThemes.length;
-
-//     if (docCount >= 5 && themeCount >= 3) return 'Excellent Context';
-//     if (docCount >= 3 && themeCount >= 2) return 'Good Context';
-//     if (docCount >= 1 && themeCount >= 1) return 'Fair Context';
+    if (docCount >= 5 && themeCount >= 3) return 'Excellent Context';
+    if (docCount >= 3 && themeCount >= 2) return 'Good Context';
+    if (docCount >= 1 && themeCount >= 1) return 'Fair Context';
     
-//     return 'Limited Context';
-// }
+    return 'Limited Context';
+}
 
-// /**
-//  * Determine if advanced options should be shown
-//  * @returns {boolean} True if advanced options should be displayed
-//  */
-// get showAdvancedOptions() {
-//     return this.selectedAIModel && this.folderAnalysis;
-// }
+/**
+ * Determine if advanced options should be shown
+ * @returns {boolean} True if advanced options should be displayed
+ */
+get showAdvancedOptions() {
+    return this.selectedAIModel && this.folderAnalysis;
+}
 
-// /**
-//  * Handle template selection change
-//  * @param {Event} event - The change event
-//  */
-// handleTemplateChange(event) {
-//     this.selectedTemplate = event.detail.value;
+/**
+ * Handle template selection change
+ * @param {Event} event - The change event
+ */
+handleTemplateChange(event) {
+    this.selectedTemplate = event.detail.value;
     
-//     const selectedOption = Array.from(event.target.options).find(
-//         opt => opt.value === this.selectedTemplate
-//     );
+    const selectedOption = Array.from(event.target.options).find(
+        opt => opt.value === this.selectedTemplate
+    );
     
-//     this.showToast(
-//         'Info', 
-//         `Template selected: ${selectedOption.label}`, 
-//         'info'
-//     );
-// }
+    this.showToast(
+        'Info', 
+        `Template selected: ${selectedOption.label}`, 
+        'info'
+    );
+}
 
-// /**
-//  * Handle tone and audience parameter changes
-//  * @param {Event} event - The change event
-//  */
-// handleParameterChange(event) {
-//     const field = event.target.dataset.field || event.target.name;
-//     const value = event.target.type === 'checkbox' 
-//         ? event.target.checked 
-//         : event.target.value;
+/**
+ * Handle tone and audience parameter changes
+ * @param {Event} event - The change event
+ */
+handleParameterChange(event) {
+    const field = event.target.dataset.field || event.target.name;
+    const value = event.target.type === 'checkbox' 
+        ? event.target.checked 
+        : event.target.value;
 
-//     this.generationParameters = {
-//         ...this.generationParameters,
-//         [field]: value
-//     };
+    this.generationParameters = {
+        ...this.generationParameters,
+        [field]: value
+    };
 
-//     // Show contextual help based on tone selection
-//     if (field === 'tone') {
-//         this.showToneGuidance(value);
-//     }
-// }
+    // Show contextual help based on tone selection
+    if (field === 'tone') {
+        this.showToneGuidance(value);
+    }
+}
 
-// /**
-//  * Show guidance based on selected tone
-//  * @param {string} tone - The selected tone
-//  */
-// showToneGuidance(tone) {
-//     const toneGuidance = {
-//         'professional': 'Professional tone will use formal language, clear structure, and business-appropriate terminology.',
-//         'conversational': 'Conversational tone will use friendly, approachable language while maintaining professionalism.',
-//         'technical': 'Technical tone will include industry-specific terminology and detailed explanations.',
-//         'legal': 'Legal tone will use precise legal language and formal document structure.',
-//         'executive': 'Executive tone will focus on high-level insights, strategic implications, and concise communication.',
-//         'academic': 'Academic tone will use scholarly language with proper citations and research-based content.',
-//         'creative': 'Creative tone will use engaging language and innovative presentation of ideas.',
-//         'persuasive': 'Persuasive tone will use compelling arguments and action-oriented language.',
-//         'informative': 'Informative tone will focus on clear, educational content with comprehensive details.',
-//         'formal': 'Formal tone will use traditional business language with structured presentation.'
-//     };
+/**
+ * Show guidance based on selected tone
+ * @param {string} tone - The selected tone
+ */
+showToneGuidance(tone) {
+    const toneGuidance = {
+        'professional': 'Professional tone will use formal language, clear structure, and business-appropriate terminology.',
+        'conversational': 'Conversational tone will use friendly, approachable language while maintaining professionalism.',
+        'technical': 'Technical tone will include industry-specific terminology and detailed explanations.',
+        'legal': 'Legal tone will use precise legal language and formal document structure.',
+        'executive': 'Executive tone will focus on high-level insights, strategic implications, and concise communication.',
+        'academic': 'Academic tone will use scholarly language with proper citations and research-based content.',
+        'creative': 'Creative tone will use engaging language and innovative presentation of ideas.',
+        'persuasive': 'Persuasive tone will use compelling arguments and action-oriented language.',
+        'informative': 'Informative tone will focus on clear, educational content with comprehensive details.',
+        'formal': 'Formal tone will use traditional business language with structured presentation.'
+    };
 
-//     const message = toneGuidance[tone] || 'Custom tone selected.';
-//     this.showToast('Tone Selected', message, 'info');
-// }
+    const message = toneGuidance[tone] || 'Custom tone selected.';
+    this.showToast('Tone Selected', message, 'info');
+}
 
 /**
  * Advanced document generation with context awareness
  */
-// async generateDocument() {
-//     if (!this.validateInputs()) {
-//         return;
-//     }
+async generateDocument() {
+    if (!this.validateInputs()) {
+        return;
+    }
 
-//     this.isGenerating = true;
+    this.isGenerating = true;
 
-//     try {
-//         // Add context-aware parameters
-//         const enhancedParameters = {
-//             ...this.generationParameters,
-//             folderContext: this.folderAnalysis,
-//             timestamp: new Date().toISOString(),
-//             userId: this.getCurrentUserId(),
-//             sessionId: this.generateSessionId()
-//         };
+    try {
+        // Add context-aware parameters
+        const enhancedParameters = {
+            ...this.generationParameters,
+            folderContext: this.folderAnalysis,
+            timestamp: new Date().toISOString(),
+            userId: this.getCurrentUserId(),
+            sessionId: this.generateSessionId()
+        };
 
-//         const result = await generateDocumentWithContext({
-//             folderId: this.folderId,
-//             templateId: this.selectedTemplate,
-//             selectedAIModel: this.selectedAIModel,
-//             generationParameters: enhancedParameters
-//         });
+        const result = await generateDocumentWithContext({
+            folderId: this.folderId,
+            templateId: this.selectedTemplate,
+            selectedAIModel: this.selectedAIModel,
+            generationParameters: enhancedParameters
+        });
 
-//         this.generatedContent = result;
-//         this.trackGenerationEvent('success');
+        this.generatedContent = result;
+        this.trackGenerationEvent('success');
         
-//         this.showToast(
-//             'Success', 
-//             `Context-aware document generated successfully using ${this.getSelectedModelName()}`, 
-//             'success'
-//         );
+        this.showToast(
+            'Success', 
+            `Context-aware document generated successfully using ${this.getSelectedModelName()}`, 
+            'success'
+        );
 
-//     } catch (error) {
-//         this.trackGenerationEvent('error', error.body?.message || error.message);
+    } catch (error) {
+        this.trackGenerationEvent('error', error.body?.message || error.message);
         
-//         this.showToast(
-//             'Error', 
-//             `Failed to generate document: ${error.body?.message || error.message}`, 
-//             'error'
-//         );
-//     } finally {
-//         this.isGenerating = false;
-//     }
-// }
+        this.showToast(
+            'Error', 
+            `Failed to generate document: ${error.body?.message || error.message}`, 
+            'error'
+        );
+    } finally {
+        this.isGenerating = false;
+    }
+}
 
-// /**
-//  * Save generated document
-//  */
-// async saveDocument() {
-//     try {
-//         const saveResult = await saveGeneratedDocument({
-//             content: this.generatedContent,
-//             folderId: this.folderId,
-//             templateId: this.selectedTemplate,
-//             aiModel: this.selectedAIModel,
-//             parameters: this.generationParameters
-//         });
+/**
+ * Save generated document
+ */
+async saveDocument() {
+    try {
+        const saveResult = await saveGeneratedDocument({
+            content: this.generatedContent,
+            folderId: this.folderId,
+            templateId: this.selectedTemplate,
+            aiModel: this.selectedAIModel,
+            parameters: this.generationParameters
+        });
 
-//         this.showToast('Success', 'Document saved successfully', 'success');
+        this.showToast('Success', 'Document saved successfully', 'success');
         
-//     } catch (error) {
-//         this.showToast(
-//             'Error', 
-//             `Failed to save document: ${error.body?.message || error.message}`, 
-//             'error'
-//         );
-//     }
-// }
+    } catch (error) {
+        this.showToast(
+            'Error', 
+            `Failed to save document: ${error.body?.message || error.message}`, 
+            'error'
+        );
+    }
+}
 
 // /**
 //  * Download generated document
 //  */
-// downloadDocument() {
-//     try {
-//         // Create downloadable content
-//         const element = document.createElement('a');
-//         const file = new Blob([this.generatedContent], { type: 'text/plain' });
-//         const currentDate = new Date().toISOString().split('T')[0];
+downloadDocument() {
+    try {
+        // Create downloadable content
+        const element = document.createElement('a');
+        const file = new Blob([this.generatedContent], { type: 'text/plain' });
+        const currentDate = new Date().toISOString().split('T')[0];
         
-//         element.href = URL.createObjectURL(file);
-//         element.download = `context-aware-document-${currentDate}.txt`;
+        element.href = URL.createObjectURL(file);
+        element.download = `context-aware-document-${currentDate}.txt`;
         
-//         document.body.appendChild(element);
-//         element.click();
-//         document.body.removeChild(element);
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
 
-//         this.showToast('Success', 'Document downloaded successfully', 'success');
+        this.showToast('Success', 'Document downloaded successfully', 'success');
         
-//     } catch (error) {
-//         this.showToast('Error', 'Failed to download document', 'error');
-//     }
-// }
+    } catch (error) {
+        this.showToast('Error', 'Failed to download document', 'error');
+    }
+}
 
-// /**
-//  * Track generation events for analytics
-//  * @param {string} eventType - Type of event (success, error, etc.)
-//  * @param {string} details - Additional details about the event
-//  */
-// trackGenerationEvent(eventType, details = '') {
-//     const eventData = {
-//         eventType: eventType,
-//         aiModel: this.selectedAIModel,
-//         templateId: this.selectedTemplate,
-//         folderId: this.folderId,
-//         tone: this.generationParameters.tone,
-//         audience: this.generationParameters.audience,
-//         timestamp: new Date().toISOString(),
-//         details: details
-//     };
+/**
+ * Track generation events for analytics
+ * @param {string} eventType - Type of event (success, error, etc.)
+ * @param {string} details - Additional details about the event
+ */
+trackGenerationEvent(eventType, details = '') {
+    const eventData = {
+        eventType: eventType,
+        aiModel: this.selectedAIModel,
+        templateId: this.selectedTemplate,
+        folderId: this.folderId,
+        tone: this.generationParameters.tone,
+        audience: this.generationParameters.audience,
+        timestamp: new Date().toISOString(),
+        details: details
+    };
 
-//     // Send to analytics service
-//     console.log('Generation Event Tracked:', eventData);
-// }
+    // Send to analytics service
+    console.log('Generation Event Tracked:', eventData);
+}
 
-// /**
-//  * Get current user ID
-//  * @returns {string} Current user ID
-//  */
-// getCurrentUserId() {
-//     // TODO: Implementation to get current user ID
-//     return 'current-user-id';
-// }
+/**
+ * Get current user ID
+ * @returns {string} Current user ID
+ */
+getCurrentUserId() {
+    // TODO: Implementation to get current user ID
+    return 'current-user-id';
+}
 
-// /**
-//  * Generate unique session ID
-//  * @returns {string} Unique session identifier
-//  */
-// generateSessionId() {
-//     const timestamp = Date.now();
-//     const randomString = Math.random().toString(36).substr(2, 9);
-//     return `session-${timestamp}-${randomString}`;
-// }
+/**
+ * Generate unique session ID
+ * @returns {string} Unique session identifier
+ */
+generateSessionId() {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substr(2, 9);
+    return `session-${timestamp}-${randomString}`;
+}
 
-// /**
-//  * Enhanced validation with context awareness
-//  * @returns {boolean} True if all inputs are valid
-//  */
-// validateInputs() {
-//     const requiredFields = [
-//         { field: this.folderId, message: 'Please select a folder' },
-//         { field: this.selectedAIModel, message: 'Please select an AI model' },
-//         { field: this.selectedTemplate, message: 'Please select a document template' }
-//     ];
+/**
+ * Enhanced validation with context awareness
+ * @returns {boolean} True if all inputs are valid
+ */
+validateInputs() {
+    const requiredFields = [
+        { field: this.folderId, message: 'Please select a folder' },
+        { field: this.selectedAIModel, message: 'Please select an AI model' },
+        { field: this.selectedTemplate, message: 'Please select a document template' }
+    ];
 
-//     // Check required fields
-//     for (const required of requiredFields) {
-//         if (!required.field) {
-//             this.showToast('Validation Error', required.message, 'warning');
-//             return false;
-//         }
-//     }
+    // Check required fields
+    for (const required of requiredFields) {
+        if (!required.field) {
+            this.showToast('Validation Error', required.message, 'warning');
+            return false;
+        }
+    }
 
-//     // Context-specific validation
-//     if (!this.folderAnalysis) {
-//         this.showToast('Validation Error', 'Please analyze folder context first', 'warning');
-//         return false;
-//     }
+    // Context-specific validation
+    if (!this.folderAnalysis) {
+        this.showToast('Validation Error', 'Please analyze folder context first', 'warning');
+        return false;
+    }
 
-//     if (this.folderAnalysis.documents.length === 0) {
-//         this.showToast(
-//             'Validation Error', 
-//             'Selected folder contains no documents for context analysis', 
-//             'warning'
-//         );
-//         return false;
-//     }
+    if (this.folderAnalysis.documents.length === 0) {
+        this.showToast(
+            'Validation Error', 
+            'Selected folder contains no documents for context analysis', 
+            'warning'
+        );
+        return false;
+    }
 
-//     return true;
-// }
-// }
+    return true;
+}
+}
 
 
 
@@ -1093,92 +1081,92 @@
 // }
 
 
-import { LightningElement, api, track } from 'lwc';
-import getAIModels from '@salesforce/apex/AIModelManager.getAvailableAIModels';
-import analyzeFolderContext from '@salesforce/apex/ContextAwareDocumentEngine.analyzeFolderContext';
-import generateContextAwareDocument from '@salesforce/apex/DocumentGenerationEngine.generateContextAwareDocument';
+// import { LightningElement, api, track } from 'lwc';
+// import getAIModels from '@salesforce/apex/AIModelManager.getAvailableAIModels';
+// import analyzeFolderContext from '@salesforce/apex/ContextAwareDocumentEngine.analyzeFolderContext';
+// import generateContextAwareDocument from '@salesforce/apex/DocumentGenerationEngine.generateContextAwareDocument';
 
-export default class ContextAwareDocGen extends LightningElement {
-    @api recordId; // Folder ID
+// export default class ContextAwareDocGen extends LightningElement {
+//     @api recordId; // Folder ID
 
-    @track selectedAIModel = '';
-    @track aiModelOptions = [];
-    @track folderContext = null;
-    @track isAnalyzing = false;
-    @track generateDisabled = true;
+//     @track selectedAIModel = '';
+//     @track aiModelOptions = [];
+//     @track folderContext = null;
+//     @track isAnalyzing = false;
+//     @track generateDisabled = true;
 
-    connectedCallback() {
-        this.loadAIModels();
-    }
+//     connectedCallback() {
+//         this.loadAIModels();
+//     }
 
-    async loadAIModels() {
-        try {
-            const models = await getAIModels();
-            this.aiModelOptions = models.map(model => ({
-                label: `${model.modelName} (${model.provider})`,
-                value: model.modelId
-            }));
-        } catch (error) {
-            console.error('Error loading AI models:', error);
-        }
-    }
+//     async loadAIModels() {
+//         try {
+//             const models = await getAIModels();
+//             this.aiModelOptions = models.map(model => ({
+//                 label: `${model.modelName} (${model.provider})`,
+//                 value: model.modelId
+//             }));
+//         } catch (error) {
+//             console.error('Error loading AI models:', error);
+//         }
+//     }
 
-    handleAIModelChange(event) {
-        this.selectedAIModel = event.detail.value;
-        this.generateDisabled = !this.selectedAIModel || !this.folderContext;
-    }
+//     handleAIModelChange(event) {
+//         this.selectedAIModel = event.detail.value;
+//         this.generateDisabled = !this.selectedAIModel || !this.folderContext;
+//     }
 
-    async handleAnalyzeFolderContext() {
-        if (!this.selectedAIModel) {
-            this.showToast('Error', 'Please select an AI model first', 'error');
-            return;
-        }
+//     async handleAnalyzeFolderContext() {
+//         if (!this.selectedAIModel) {
+//             this.showToast('Error', 'Please select an AI model first', 'error');
+//             return;
+//         }
 
-        this.isAnalyzing = true;
+//         this.isAnalyzing = true;
 
-        try {
-            this.folderContext = await analyzeFolderContext({
-                folderId: this.recordId,
-                selectedAIModel: this.selectedAIModel
-            });
+//         try {
+//             this.folderContext = await analyzeFolderContext({
+//                 folderId: this.recordId,
+//                 selectedAIModel: this.selectedAIModel
+//             });
 
-            this.generateDisabled = false;
-            this.showToast('Success', 'Folder context analyzed successfully', 'success');
-        } catch (error) {
-            console.error('Context analysis error:', error);
-            this.showToast('Error', 'Failed to analyze folder context', 'error');
-        } finally {
-            this.isAnalyzing = false;
-        }
-    }
+//             this.generateDisabled = false;
+//             this.showToast('Success', 'Folder context analyzed successfully', 'success');
+//         } catch (error) {
+//             console.error('Context analysis error:', error);
+//             this.showToast('Error', 'Failed to analyze folder context', 'error');
+//         } finally {
+//             this.isAnalyzing = false;
+//         }
+//     }
 
-    get contextInsights() {
-        if (!this.folderContext?.contextualInsights) return [];
+//     get contextInsights() {
+//         if (!this.folderContext?.contextualInsights) return [];
 
-        const insights = this.folderContext.contextualInsights;
-        return Object.keys(insights).map(key => ({
-            key,
-            label: this.formatInsightLabel(key),
-            value: insights[key]
-        }));
-    }
+//         const insights = this.folderContext.contextualInsights;
+//         return Object.keys(insights).map(key => ({
+//             key,
+//             label: this.formatInsightLabel(key),
+//             value: insights[key]
+//         }));
+//     }
 
-    formatInsightLabel(key) {
-        return key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase());
-    }
+//     formatInsightLabel(key) {
+//         return key
+//             .replace(/([A-Z])/g, ' $1')
+//             .replace(/^./, str => str.toUpperCase());
+//     }
 
-    get formattedTimestamp() {
-        return this.folderContext?.analysisTimestamp
-            ? new Date(this.folderContext.analysisTimestamp).toLocaleString()
-            : '';
-    }
+//     get formattedTimestamp() {
+//         return this.folderContext?.analysisTimestamp
+//             ? new Date(this.folderContext.analysisTimestamp).toLocaleString()
+//             : '';
+//     }
 
-    showToast(title, message, variant) {
-        const evt = new CustomEvent('showtoast', {
-            detail: { title, message, variant }
-        });
-        this.dispatchEvent(evt);
-    }
-}
+//     showToast(title, message, variant) {
+//         const evt = new CustomEvent('showtoast', {
+//             detail: { title, message, variant }
+//         });
+//         this.dispatchEvent(evt);
+//     }
+// }

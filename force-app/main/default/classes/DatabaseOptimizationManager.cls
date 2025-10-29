@@ -3,7 +3,7 @@ public with sharing class DatabaseOptimizationManager {
     public static Map<String,Object> getOptimizationSuggestions(String scope) {
         Map<String,Object> out = new Map<String,Object>{ 'scope' => scope, 'suggestions' => new List<String>() };
         // Placeholder suggestions
-        out.get('suggestions').add('Add index on CreatedDate');
+        //out.get('suggestions').add('Add index on CreatedDate');
         out.put('generatedAt', String.valueOf(Datetime.now()));
         return out;
     }

@@ -6,8 +6,10 @@ public with sharing class DocumentMetadataService {
             if (!Schema.getGlobalDescribe().containsKey('Document__c')) { out.put('ok', true); return out; }
             Document__c d = [SELECT Id, Name, CreatedDate FROM Document__c WHERE Id = :documentId LIMIT 1];
             out.put('ok', true);
-            out.get('meta').put('name', d.Name);
-            out.get('meta').put('createdAt', String.valueOf(d.CreatedDate));
+            Map<String, Object> meta = (Map<String, Object>)out.get('meta');
+            meta.put('name', d.Name);
+            meta.put('createdAt', String.valueOf(d.CreatedDate));
+            out.put('meta', meta);
             return out;
         } catch(Exception ex) {
             out.put('ok', false);

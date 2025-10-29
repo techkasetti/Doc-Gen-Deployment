@@ -1,5 +1,93 @@
 <template>
-  <lightning-card title="Context-Aware Document Generator" icon-name="standard:einstein">
-    <!-- TODO: Implement multi-step UI -->
-  </lightning-card>
+    <lightning-card title="AI Clause Suggestions" icon-name="utility:light_bulb">
+
+        <div class="slds-p-horizontal_medium slds-p-top_medium">
+            <lightning-button
+                label={buttonLabel}
+                variant="brand"
+                onclick={handleSuggest}
+                disabled={isLoading}
+                title="Generate AI-powered clause suggestions based on the document's context">
+            </lightning-button>
+        </div>
+
+        <div class="slds-p-around_medium">
+
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-vertical_large">
+                    <lightning-spinner
+                        alternative-text="Loading suggestions..."
+                        size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error Message -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        alternative-text="Error"
+                        size="x-small"
+                        variant="inverse"
+                        class="slds-m-right_x-small">
+                    </lightning-icon>
+                    {error}
+                </div>
+            </template>
+
+            <!-- Clause Suggestions List -->
+            <template if:false={isLoading}>
+                <template if:true={suggestions.length}>
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">
+                        Recommended Clauses ({suggestions.length}):
+                    </h3>
+
+                    <ul class="slds-has-dividers_top-space">
+                        <template for:each={suggestions} for:item="suggestion">
+                            <li key={suggestion.id} class="slds-item slds-p-vertical_small">
+
+                                <div class="slds-grid slds-wrap slds-gutters_small">
+                                    <div class="slds-col slds-size_11-of-12">
+                                        <p>{suggestion.text}</p>
+
+                                        <p class="slds-text-body_small slds-text-color_weak slds-m-top_x-small">
+                                            AI Confidence: {suggestion.confidence}%
+                                        </p>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-12 slds-text-align_right">
+                                        <lightning-button-icon
+                                            icon-name="utility:copy"
+                                            variant="border-filled"
+                                            alternative-text="Copy clause"
+                                            title="Copy clause"
+                                            data-text={suggestion.text}
+                                            onclick={handleCopy}>
+                                        </lightning-button-icon>
+                                    </div>
+                                </div>
+
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+
+                <!-- Empty state when no suggestions -->
+                <template if:false={suggestions.length}>
+                    <template if:false={error}>
+                        <div class="slds-text-align_center slds-p-vertical_medium">
+                            <p class="slds-text-color_weak">
+                                Click "Get Suggestions" to generate AI-powered clauses.
+                            </p>
+                        </div>
+                    </template>
+                </template>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
 </template>

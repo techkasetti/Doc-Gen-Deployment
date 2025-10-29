@@ -1,4 +1,3 @@
-
 public class RealTimeNotificationService {
     public static void broadcastToConnections(List<OperationBroadcast__c> broadcasts) {
         // Implementation for real-time notifications via WebSocket/Server-Sent Events
@@ -6,13 +5,11 @@ public class RealTimeNotificationService {
             // In a real implementation, this would integrate with a WebSocket service
             // or use Platform Events for real-time communication
             
-            CollaborativeNotification__e notification = new CollaborativeNotification__e(
-                Participant_Id__c = broadcast.Participant__c,
-                Operation_Data__c = broadcast.Message_JSON__c,
-                Message_Type__c = broadcast.Message_Type__c,
-                Broadcast_Time__c = DateTime.now()
-            );
-            
+            CollaborativeNotification__e notification = new CollaborativeNotification__e();
+                notification.Participant_Id__c = broadcast.Participant__c;
+                notification.Operation_Data__c = broadcast.Message_JSON__c;
+                notification.Message_Type__c = broadcast.Message_Type__c;
+                notification.Broadcast_Time__c = DateTime.now();
             EventBus.publish(notification);
         }
         

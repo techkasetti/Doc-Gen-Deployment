@@ -316,7 +316,7 @@ public with sharing class ComplianceSecurityValidator {
     private static Boolean hasAuditTrail(String documentId) {
         Integer count = [
             SELECT COUNT() 
-            FROM AuditTrail__c 
+            FROM Audit_Trail__c 
             WHERE Document_Id__c = :documentId
         ];
         return count > 0;

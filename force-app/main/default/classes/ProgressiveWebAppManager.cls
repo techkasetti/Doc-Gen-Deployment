@@ -1,4 +1,4 @@
-public with sharing class MobileIntegrationManager {
+public with sharing class ProgressiveWebAppManager {
 
     @AuraEnabled
     public static Map<String, Object> configureMobileSettings(String platformType, Map<String, Object> mobileConfig) {

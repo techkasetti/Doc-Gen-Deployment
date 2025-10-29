@@ -174,7 +174,7 @@ public class DocumentRiskAssessor {
     List<SystemDowntime__c> downtimeRecords = [
         SELECT Id 
         FROM SystemDowntime__c 
-        WHERE CreatedDate >= :DateTime.now().addDays(-7)
+        WHERE CreatedDate >= :DateTime.now().addDays(-7)  
         // Use INCLUDES only if Impact__c is a multi-select picklist
         AND Impact__c INCLUDES ('DOCUMENT_ACCESS')
     ];
@@ -286,14 +286,14 @@ public class DocumentRiskAssessor {
         }
         
         // Check public access
-        List<ContentDocumentLink> publicLinks = [
+        /*List<ContentDocumentLink> publicLinks = [
             SELECT Visibility FROM ContentDocumentLink 
             WHERE ContentDocumentId = :documentId 
             AND Visibility = 'AllUsers'
         ];
         if (!publicLinks.isEmpty() && analysis.Sensitivity_Level__c != 'LOW') {
             riskScore += 40;
-        }
+        }*/
         
         // Check recent security incidents
         List<SecurityIncident__c> incidents = [
@@ -518,4 +518,3 @@ public class RiskAssessmentResult {
     }
 }
 }
-

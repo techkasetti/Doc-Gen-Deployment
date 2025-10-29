@@ -1,4 +1,4 @@
-// EnvironmentManager.cls
+// EnvironmentManager.txt
 public with sharing class EnvironmentManager {
 
     @AuraEnabled

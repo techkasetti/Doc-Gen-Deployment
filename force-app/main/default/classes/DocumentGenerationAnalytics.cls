@@ -177,65 +177,65 @@ public with sharing class DocumentGenerationAnalytics {
     }
 
     private static String generateCSVReport(Map<String, Object> analytics) {
-        StringBuilder csv = new StringBuilder();
+        String csv = '';
 
         // Header
-        csv.append('AI Document Generation Analytics Report\n');
-        csv.append('Generated on: ' + DateTime.now().format() + '\n\n');
+        csv += 'AI Document Generation Analytics Report\n';
+        csv += 'Generated on: ' + DateTime.now().format() + '\n\n';
 
         // Volume by Model
-        csv.append('Model Usage Statistics\n');
-        csv.append('AI Model,Total Generations,Average Length\n');
+        csv += 'Model Usage Statistics\n';
+        csv += 'AI Model,Total Generations,Average Length\n';
         List<Object> volumeData = (List<Object>) analytics.get('volumeByModel');
         for (Object item : volumeData) {
             Map<String, Object> data = (Map<String, Object>) item;
-            csv.append('"' + data.get('modelUsed') + '",');
-            csv.append(data.get('totalGenerations') + ',');
-            csv.append(data.get('avgLength') + '\n');
+            csv += '"' + data.get('modelUsed') + '",';
+            csv += data.get('totalGenerations') + ',';
+            csv += data.get('avgLength') + '\n';
         }
-        csv.append('\n');
+        csv += '\n';
 
         // Daily Trends
-        csv.append('Daily Generation Trends\n');
-        csv.append('Date,Document Count\n');
+        csv += 'Daily Generation Trends\n';
+        csv += 'Date,Document Count\n';
         List<Object> dailyData = (List<Object>) analytics.get('dailyTrends');
         for (Object item : dailyData) {
             Map<String, Object> data = (Map<String, Object>) item;
-            csv.append('"' + data.get('date') + '",');
-            csv.append(data.get('count') + '\n');
+            csv += '"' + data.get('date') + '",';
+            csv += data.get('count') + '\n';
         }
-        csv.append('\n');
+        csv += '\n';
 
         // Template Usage
-        csv.append('Template Usage Statistics\n');
-        csv.append('Template Name,Usage Count,Average Length\n');
+        csv += 'Template Usage Statistics\n';
+        csv += 'Template Name,Usage Count,Average Length\n';
         List<Object> templateData = (List<Object>) analytics.get('templateUsage');
         for (Object item : templateData) {
             Map<String, Object> data = (Map<String, Object>) item;
-            csv.append('"' + data.get('templateName') + '",');
-            csv.append(data.get('usageCount') + ',');
-            csv.append(data.get('avgLength') + '\n');
+            csv += '"' + data.get('templateName') + '",';
+            csv += data.get('usageCount') + ',';
+            csv += data.get('avgLength') + '\n';
         }
-        csv.append('\n');
+        csv += '\n';
 
         // Performance Metrics
         Map<String, Object> performance = (Map<String, Object>) analytics.get('performance');
-        csv.append('Performance Metrics\n');
-        csv.append('Metric,Value\n');
-        csv.append('Average Generation Time (seconds),' + performance.get('avgGenerationTime') + '\n');
-        csv.append('Total Documents Generated,' + performance.get('totalDocuments') + '\n');
-        csv.append('\n');
+        csv += 'Performance Metrics\n';
+        csv += 'Metric,Value\n';
+        csv += 'Average Generation Time (seconds),' + performance.get('avgGenerationTime') + '\n';
+        csv += 'Total Documents Generated,' + performance.get('totalDocuments') + '\n';
+        csv += '\n';
 
         // Context Utilization
         Map<String, Object> contextMetrics = (Map<String, Object>) analytics.get('contextUtilization');
-        csv.append('Context Feature Utilization (%)\n');
-        csv.append('Feature,Utilization Rate\n');
-        csv.append('Cross References,' + contextMetrics.get('crossReferencesUtilization') + '\n');
-        csv.append('Entity Consolidation,' + contextMetrics.get('entityConsolidationUtilization') + '\n');
-        csv.append('Source Citations,' + contextMetrics.get('sourceCitationsUtilization') + '\n');
-        csv.append('Contextual Insights,' + contextMetrics.get('contextualInsightsUtilization') + '\n');
+        csv += 'Context Feature Utilization (%)\n';
+        csv += 'Feature,Utilization Rate\n';
+        csv += 'Cross References,' + contextMetrics.get('crossReferencesUtilization') + '\n';
+        csv += 'Entity Consolidation,' + contextMetrics.get('entityConsolidationUtilization') + '\n';
+        csv += 'Source Citations,' + contextMetrics.get('sourceCitationsUtilization') + '\n';
+        csv += 'Contextual Insights,' + contextMetrics.get('contextualInsightsUtilization') + '\n';
 
-        return csv.toString();
+        return csv;
     }
 
     // Placeholder: processTemplateUsage method

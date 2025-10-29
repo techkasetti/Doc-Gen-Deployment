@@ -55,7 +55,7 @@ public class ContextAwareGenerationSupport {
             mergeFields.put('CROSS_DOCUMENT_RELATIONSHIPS', relationshipCount);
             
             // AI-powered insights
-            mergeFields.put('AI_INSIGHTS_AVAILABLE', folderContext.contextSummary != null);
+            //mergeFields.put('AI_INSIGHTS_AVAILABLE', folderContext.contextSummary != null);
             mergeFields.put('SUGGESTED_TEMPLATES_COUNT', folderContext.suggestedTemplates != null ? folderContext.suggestedTemplates.size() : 0);
             
         } catch (Exception e) {

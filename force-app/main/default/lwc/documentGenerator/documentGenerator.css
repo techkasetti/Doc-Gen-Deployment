@@ -1,239 +1,10 @@
-/* 
-.step-container {
-    margin-bottom: 1rem;
-    border-radius: 0.25rem;
-}
-
-
-.slds-progress-bar {
-    height: 0.5rem;
-    background-color: #f3f3f3;
-    border-radius: 0.25rem;
-    overflow: hidden;
-    position: relative;
-}
-
-.slds-progress-bar__value {
-    height: 100%;
-    background: linear-gradient(90deg, #1589ee 0%, #0070d2 100%);
-    transition: width 0.3s ease;
-    border-radius: 0.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    min-width: 50px;
-}
-
-
-.generation-progress {
-    padding: 2rem;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0.5rem;
-    border: 1px solid #dee2e6;
-}
-
-.generation-progress lightning-spinner {
-    margin-bottom: 1rem;
-}
-
-
-.generated-content {
-    border: 1px solid #d8dde6;
-    border-radius: 0.5rem;
-    background: #fafbfc;
-}
-
-.clause-content {
-    padding: 1rem;
-    font-family: 'Courier New', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    background: white;
-    border-radius: 0.25rem;
-    margin: 0.5rem;
-    border: 1px solid #e5e5e5;
-}
-
-.compliance-status {
-    margin-top: 1rem;
-}
-
-.compliance-details {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.25rem;
-    border-left: 4px solid #1589ee;
-}
-
-
-.success-details {
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-    border: 1px solid #c3e6cb;
-    color: #155724;
-}
-
-.success-details p {
-    margin: 0.25rem 0;
-}
-
-.success-details strong {
-    font-weight: 600;
-}
-
-
-.email-status {
-    background: #d1ecf1;
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-    border-left: 4px solid #17a2b8;
-    color: #0c5460;
-    display: flex;
-    align-items: center;
-}
-
-
-.step-indicator {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    background: #f8f9fa;
-    border-radius: 1rem;
-    border: 1px solid #dee2e6;
-}
-
-
-lightning-button-group {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-
-.slds-form-element {
-    margin-bottom: 1rem;
-}
-
-lightning-combobox,
-lightning-input,
-lightning-textarea {
-    --sds-c-input-color-border: #d8dde6;
-    --sds-c-input-radius-border: 0.25rem;
-}
-
-lightning-combobox:focus-within,
-lightning-input:focus-within,
-lightning-textarea:focus-within {
-    --sds-c-input-color-border: #1589ee;
-    --sds-c-input-shadow: 0 0 0 2px rgba(21, 137, 238, 0.1);
-}
-
-
-lightning-checkbox-group {
-    --sds-c-checkbox-color-border: #d8dde6;
-}
-
-@media (max-width: 768px) {
-    .slds-grid {
-        display: block;
-    }
-    .slds-col {
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-    lightning-button-group {
-        flex-direction: column;
-    }
-    lightning-button {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    .clause-content {
-        font-size: 0.75rem;
-        padding: 0.75rem;
-    }
-}
-
-
-.fade-in {
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-.slds-notify_container {
-    position: fixed;
-    top: 4rem;
-    right: 1rem;
-    z-index: 9999;
-    max-width: 400px;
-}
-
-.slds-notify {
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-
-@media (prefers-color-scheme: dark) {
-    .step-container {
-        background-color: #2a2a2a;
-        color: #ffffff;
-    }
-    .generated-content {
-        background-color: #1a1a1a;
-        border-color: #444444;
-    }
-    .clause-content {
-        background-color: #000000;
-        color: #ffffff;
-        border-color: #444444;
-    }
-}
-
-@media (prefers-contrast: high) {
-    .step-container,
-    .generated-content,
-    .clause-content {
-        border-width: 2px;
-    }
-    lightning-button {
-        border-width: 2px;
-    }
-}
-
-@media print {
-    .slds-card__footer,
-    lightning-button-group,
-    .generation-progress {
-        display: none;
-    }
-    .clause-content {
-        background: white !important;
-        color: black !important;
-        border: 1px solid black;
-    }
-} */
-
-/* Main Container Styles */
+/* ✅ Main Container */
 .step-container {
   margin-bottom: 1rem;
   border-radius: 0.25rem;
 }
 
-/* Progress Bar Styles */
+/* ✅ Progress Bar */
 .slds-progress-bar {
   height: 0.5rem;
   background-color: #f3f3f3;
@@ -255,7 +26,7 @@ lightning-checkbox-group {
   min-width: 50px;
 }
 
-/* Generation Progress Styles */
+/* ✅ AI Clause Generation Progress */
 .generation-progress {
   padding: 2rem;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -267,7 +38,7 @@ lightning-checkbox-group {
   margin-bottom: 1rem;
 }
 
-/* Generated Content Styles */
+/* ✅ AI Generated Content */
 .generated-content {
   border: 1px solid #d8dde6;
   border-radius: 0.5rem;
@@ -286,7 +57,7 @@ lightning-checkbox-group {
   border: 1px solid #e5e5e5;
 }
 
-/* Compliance Status Styles */
+/* ✅ Compliance Status */
 .compliance-status {
   margin-top: 1rem;
 }
@@ -298,7 +69,7 @@ lightning-checkbox-group {
   border-left: 4px solid #1589ee;
 }
 
-/* Success Page Styles */
+/* ✅ Success */
 .success-details {
   background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
   border: 1px solid #c3e6cb;
@@ -313,7 +84,7 @@ lightning-checkbox-group {
   font-weight: 600;
 }
 
-/* Email Status Styles */
+/* ✅ Email Status */
 .email-status {
   background: #d1ecf1;
   padding: 0.75rem;
@@ -324,7 +95,7 @@ lightning-checkbox-group {
   align-items: center;
 }
 
-/* Step Indicator Styles */
+/* ✅ Step Number UI */
 .step-indicator {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
@@ -333,7 +104,7 @@ lightning-checkbox-group {
   border: 1px solid #dee2e6;
 }
 
-/* Button Group Enhancements */
+/* ✅ Button Layout */
 lightning-button-group {
   display: flex;
   gap: 0.5rem;
@@ -341,7 +112,7 @@ lightning-button-group {
   justify-content: center;
 }
 
-/* Form Field Enhancements */
+/* ✅ Form Fields */
 .slds-form-element {
   margin-bottom: 1rem;
 }
@@ -360,38 +131,12 @@ lightning-textarea:focus-within {
   --sds-c-input-shadow: 0 0 0 2px rgba(21, 137, 238, 0.1);
 }
 
-/* Checkbox Group Styles */
+/* ✅ Checkbox Group */
 lightning-checkbox-group {
   --sds-c-checkbox-color-border: #d8dde6;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .slds-grid {
-    display: block;
-  }
-
-  .slds-col {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  lightning-button-group {
-    flex-direction: column;
-  }
-
-  lightning-button {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  .clause-content {
-    font-size: 0.75rem;
-    padding: 0.75rem;
-  }
-}
-
-/* Animation Classes */
+/* ✅ Animation */
 .fade-in {
   animation: fadeIn 0.3s ease-in;
 }
@@ -401,14 +146,13 @@ lightning-checkbox-group {
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* Error Toast Styles */
+/* ✅ Error Toast UI */
 .slds-notify_container {
   position: fixed;
   top: 4rem;
@@ -422,18 +166,16 @@ lightning-checkbox-group {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Dark Mode Support */
+/* ✅ Dark Mode */
 @media (prefers-color-scheme: dark) {
   .step-container {
     background-color: #2a2a2a;
     color: #ffffff;
   }
-
   .generated-content {
     background-color: #1a1a1a;
     border-color: #444444;
   }
-
   .clause-content {
     background-color: #000000;
     color: #ffffff;
@@ -441,27 +183,25 @@ lightning-checkbox-group {
   }
 }
 
-/* High Contrast Mode */
+/* ✅ High Contrast */
 @media (prefers-contrast: high) {
   .step-container,
   .generated-content,
   .clause-content {
     border-width: 2px;
   }
-
   lightning-button {
     border-width: 2px;
   }
 }
 
-/* Print Styles */
+/* ✅ Print Optimization */
 @media print {
   .slds-card__footer,
   lightning-button-group,
   .generation-progress {
     display: none;
   }
-
   .clause-content {
     background: white !important;
     color: black !important;
