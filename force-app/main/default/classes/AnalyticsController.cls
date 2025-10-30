@@ -1,7 +1,48 @@
 // =====================================
 // AnalyticsController.txt
 // =====================================
+// =====================================
+// AnalyticsController.txt
+// =====================================
 public with sharing class AnalyticsController {
+    /**
+     * Returns basic analytics data for the UI.
+     */
+    @AuraEnabled
+    public static Map<String, Object> getAnalyticsData() {
+        return getAdvancedAnalytics('last_30_days', false);
+    }
+
+    /**
+     * Returns advanced analytics data for a given period and detail level.
+     */
+    @AuraEnabled
+    public static Map<String, Object> getAdvancedAnalytics(String period, Boolean detailed) {
+        Map<String, Object> data = new Map<String, Object>();
+        // Example stubbed data, can be replaced with real queries
+        data.put('totalRequests', 120);
+        data.put('completionRate', 95);
+        data.put('averageCompletionTime', 2.5);
+        data.put('activeUsers', 50);
+        data.put('systemUptime', 99.9);
+        data.put('performanceScore', 87);
+        if (detailed) {
+            data.put('detailedBreakdown', 'Detailed analytics breakdown goes here.');
+        }
+        return data;
+    }
+
+    /**
+     * Returns recent activity for analytics (stubbed for demo).
+     */
+    @AuraEnabled
+    public static List<Map<String, Object>> getRecentActivity() {
+        List<Map<String, Object>> activities = new List<Map<String, Object>>();
+        activities.add(new Map<String, Object>{'timestamp'=>String.valueOf(DateTime.now()),'action'=>'Export','user'=>'User A'});
+        activities.add(new Map<String, Object>{'timestamp'=>String.valueOf(DateTime.now().addMinutes(-10)),'action'=>'View','user'=>'User B'});
+        activities.add(new Map<String, Object>{'timestamp'=>String.valueOf(DateTime.now().addMinutes(-30)),'action'=>'Download','user'=>'User C'});
+        return activities;
+    }
 
     @TestVisible
     private static Boolean mockAccessCheck = null;
@@ -99,18 +140,7 @@ public with sharing class AnalyticsController {
         return cd.Id;
     }
 
-    // Stub methods for completeness
-    private static Map<String, Object> getAdvancedAnalytics(String period, Boolean detailed) {
-        Map<String, Object> data = new Map<String, Object>();
-        data.put('totalRequests', 120);
-        data.put('completionRate', 95);
-        data.put('averageCompletionTime', 2.5);
-        data.put('activeUsers', 50);
-        data.put('systemUptime', 99.9);
-        data.put('performanceScore', 87);
-        return data;
-    }
-
+    
     private static void logAnalyticsError(Exception e, String methodName) {
         System.debug('Error in ' + methodName + ': ' + e.getMessage());
     }

@@ -1,0 +1,880 @@
+<template>
+    <lightning-card title="Document Viewer" icon-name="standard:file">
+        <div class="slds-p-around_medium">
+            <div class="document-header slds-m-bottom_medium">
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <h3 class="slds-text-heading_medium">{documentTitle}</h3>
+                        <p class="slds-text-body_small slds-text-color_weak">
+                            Created: {createdDate} | Status: 
+                            <lightning-badge label={documentStatus} variant={statusVariant}></lightning-badge>
+                        </p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                        <lightning-button-group>
+                            <lightning-button 
+                                label="Download PDF" 
+                                icon-name="utility:download"
+                                onclick={handleDownload}
+                                disabled={isLoading}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Request Signature" 
+                                icon-name="utility:signature"
+                                variant="brand"
+                                onclick={handleSignatureRequest}
+                                disabled={isLoading}>
+                            </lightning-button>
+                        </lightning-button-group>
+                    </div>
+                </div>
+            </div>
+
+            <div class="document-content slds-box">
+                <template if:true={isLoading}>
+                    <div class="slds-text-align_center slds-p-vertical_large">
+                        <lightning-spinner alternative-text="Loading document..." size="medium"></lightning-spinner>
+                        <p class="slds-m-top_small">Loading document content...</p>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}>
+                    <div class="document-preview">
+                        <template if:true={documentContent}>
+                            <div class="document-text" lwc:dom="manual"></div>
+                        </template>
+                        
+                        <template if:false={documentContent}>
+                            <div class="empty-state slds-text-align_center slds-p-vertical_large">
+                                <lightning-icon icon-name="utility:file" size="large" class="slds-m-bottom_small"></lightning-icon>
+                                <h3 class="slds-text-heading_small">No Document Content</h3>
+                                <p class="slds-text-body_regular">Select a document to view its content.</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <template if:true={showAIAnalysis}>
+                <div class="ai-analysis-panel slds-m-top_medium">
+                    <lightning-card title="AI Document Analysis" icon-name="standard:einstein">
+                        <div class="slds-p-horizontal_medium">
+                            <template if:true={aiAnalysisLoading}>
+                                <div class="slds-text-align_center slds-p-vertical_medium">
+                                    <lightning-spinner alternative-text="Analyzing document..." size="small"></lightning-spinner>
+                                    <p class="slds-m-top_small">AI is analyzing the document...</p>
+                                </div>
+                            </template>
+
+                            <template if:false={aiAnalysisLoading}>
+                                <div class="analysis-section slds-m-bottom_medium">
+                                    <h4 class="slds-text-heading_small slds-m-bottom_small">Compliance Analysis</h4>
+                                    <div class="compliance-metrics slds-grid slds-gutters">
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <div class="metric-card slds-box slds-text-align_center">
+                                                <div class="metric-value slds-text-heading_large">{complianceScore}%</div>
+                                                <div class="metric-label slds-text-body_small">Compliance Score</div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <div class="metric-card slds-box slds-text-align_center">
+                                                <div class="metric-value slds-text-heading_large">{riskLevel}</div>
+                                                <div class="metric-label slds-text-body_small">Risk Level</div>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <div class="metric-card slds-box slds-text-align_center">
+                                                <div class="metric-value slds-text-heading_large">{issuesFound}</div>
+                                                <div class="metric-label slds-text-body_small">Issues Found</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-section slds-m-bottom_medium">
+                                    <h4 class="slds-text-heading_small slds-m-bottom_small">Key Insights</h4>
+                                    <template for:each={keyInsights} for:item="insight">
+                                        <div key={insight.id} class="insight-item slds-m-bottom_small">
+                                            <div class="slds-media">
+                                                <div class="slds-media__figure">
+                                                    <lightning-icon 
+                                                        icon-name={insight.icon} 
+                                                        size="small" 
+                                                        variant={insight.variant}>
+                                                    </lightning-icon>
+                                                </div>
+                                                <div class="slds-media__body">
+                                                    <p class="slds-text-body_regular">{insight.message}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="analysis-section">
+                                    <h4 class="slds-text-heading_small slds-m-bottom_small">Recommendations</h4>
+                                    <template for:each={recommendations} for:item="recommendation">
+                                        <div key={recommendation.id} class="recommendation-item slds-box slds-m-bottom_small">
+                                            <div class="slds-grid">
+                                                <div class="slds-col slds-size_1-of-12">
+                                                    <lightning-badge label={recommendation.priority} variant={recommendation.priorityVariant}></lightning-badge>
+                                                </div>
+                                                <div class="slds-col slds-size_11-of-12">
+                                                    <p class="slds-text-body_regular">{recommendation.text}</p>
+                                                    <template if:true={recommendation.action}>
+                                                        <lightning-button 
+                                                            label={recommendation.actionLabel} 
+                                                            size="small" 
+                                                            class="slds-m-top_x-small"
+                                                            onclick={recommendation.actionHandler}>
+                                                        </lightning-button>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </div>
+            </template>
+
+            <template if:true={signatureRequests}>
+                <div class="signature-status slds-m-top_medium">
+                    <lightning-card title="Signature Status" icon-name="standard:signature">
+                        <div class="slds-p-horizontal_medium">
+                            <template for:each={signatureRequests} for:item="request">
+                                <div key={request.Id} class="signature-request-item slds-border_bottom slds-p-vertical_small">
+                                    <div class="slds-grid slds-gutters">
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <p class="slds-text-body_regular">
+                                                <strong>{request.SignerEmail__c}</strong>
+                                            </p>
+                                            <p class="slds-text-body_small slds-text-color_weak">
+                                                Requested: {request.RequestDate__c}
+                                            </p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3 slds-text-align_center">
+                                            <lightning-badge 
+                                                label={request.Status__c} 
+                                                variant={request.StatusVariant}>
+                                            </lightning-badge>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                                            <template if:true={request.CompletedDate__c}>
+                                                <p class="slds-text-body_small">
+                                                    Completed: {request.CompletedDate__c}
+                                                </p>
+                                            </template>
+                                            
+<template if:false={request.CompletedDate__c}>
+                        <lightning-button
+                          label="Resend"
+                          size="small"
+                          onclick={handleResendSignature}
+                          data-request-id={request.Id}>
+                        </lightning-button>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </lightning-card>
+        </div>
+      </template>
+
+      <template if:true={errorMessage}>
+        <div class="slds-m-top_medium">
+          <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+            <span class="slds-assistive-text">Error</span>
+            <lightning-icon icon-name="utility:error" size="x-small" variant="inverse"></lightning-icon>
+            {errorMessage}
+          </div>
+        </div>
+      </template>
+
+    </div>
+  </lightning-card>
+</template>
+
+
+<!-- version 1 -->
+
+<!-- <template>
+    <lightning-card title="Document Viewer" icon-name="standard:document">
+        <div class="slds-p-horizontal_medium"> -->
+            <!-- Document Header -->
+            <!-- <div class="document-header slds-m-bottom_medium">
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <dl class="slds-list_horizontal slds-wrap">
+                            <dt class="slds-item_label slds-text-color_weak">Document:</dt>
+                            <dd class="slds-item_detail slds-truncate">{documentTitle}</dd>
+                            <dt class="slds-item_label slds-text-color_weak">Status:</dt>
+                            <dd class="slds-item_detail">
+                                <lightning-badge label={documentStatus} variant={statusVariant}></lightning-badge>
+                            </dd>
+                            <dt class="slds-item_label slds-text-color_weak">Created:</dt>
+                            <dd class="slds-item_detail">{createdDate}</dd>
+                        </dl>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <div class="document-actions slds-text-align_right">
+                            <lightning-button-group>
+                                <lightning-button 
+                                    variant="neutral" 
+                                    label="Download" 
+                                    onclick={handleDownload}
+                                    icon-name="utility:download">
+                                </lightning-button>
+                                <lightning-button 
+                                    variant="neutral" 
+                                    label="Print" 
+                                    onclick={handlePrint}
+                                    icon-name="utility:print">
+                                </lightning-button>
+                                <template if:true={canSign}>
+                                    <lightning-button 
+                                        variant="brand" 
+                                        label="Sign Document" 
+                                        onclick={handleSignDocument}
+                                        icon-name="utility:signature">
+                                    </lightning-button>
+                                </template>
+                            </lightning-button-group>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Document Content -->
+            <!-- <div class="document-content">
+                <template if:true={isLoading}>
+                    <div class="slds-text-align_center slds-p-vertical_large">
+                        <lightning-spinner alternative-text="Loading document..." size="medium"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}> -->
+                    <!-- PDF Viewer -->
+                    <!-- <template if:true={isPdfDocument}>
+                        <div class="pdf-viewer-container">
+                            <iframe 
+                                src={pdfViewerUrl} 
+                                class="pdf-viewer"
+                                title="Document PDF Viewer">
+                            </iframe>
+                        </div>
+                    </template> -->
+
+                    <!-- HTML Content -->
+                    <!-- <template if:true={isHtmlDocument}>
+                        <div class="html-content" lwc:dom="manual"></div>
+                    </template> -->
+
+                    <!-- Text Content --> 
+                    <!-- <template if:true={isTextDocument}> 
+                        <div class="text-content slds-box slds-theme_default">
+                            <div class="slds-text-longform"> -->
+                                <!-- Document Header Information -->
+                                <!-- <div class="document-header-info slds-m-bottom_medium">
+                                    <h2 class="slds-text-heading_medium">{documentTitle}</h2>
+                                    <div class="slds-grid slds-gutters slds-m-top_small">
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <span class="slds-text-body_small slds-text-color_weak">Document Type:</span>
+                                            <p class="slds-text-body_regular">{documentType}</p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <span class="slds-text-body_small slds-text-color_weak">Version:</span>
+                                            <p class="slds-text-body_regular">{documentVersion}</p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <span class="slds-text-body_small slds-text-color_weak">Last Modified:</span>
+                                            <p class="slds-text-body_regular">{lastModified}</p>
+                                        </div>
+                                    </div>
+                                </div> -->
+
+                                <!-- AI-Powered Content Analysis Panel -->
+                                <!-- <template if:true={hasAIAnalysis}>
+                                    <div class="ai-analysis-panel slds-box slds-theme_shade slds-m-bottom_medium">
+                                        <div class="slds-media">
+                                            <div class="slds-media__figure">
+                                                <lightning-icon icon-name="utility:einstein" size="small" alternative-text="AI Analysis"></lightning-icon>
+                                            </div>
+                                            <div class="slds-media__body">
+                                                <h3 class="slds-text-heading_small">AI Document Intelligence</h3>
+                                                <div class="slds-grid slds-gutters slds-m-top_small">
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <lightning-badge label={complianceStatus} variant={complianceVariant}></lightning-badge>
+                                                        <p class="slds-text-body_small slds-m-top_x-small">Compliance Score: {complianceScore}%</p>
+                                                    </div>
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <lightning-badge label={riskLevel} variant={riskVariant}></lightning-badge>
+                                                        <p class="slds-text-body_small slds-m-top_x-small">Risk Assessment: {riskScore}/10</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template> -->
+
+                                <!-- Document Content with Smart Annotations -->
+                                <!-- <div class="document-body-content">
+                                    <template for:each={documentSections} for:item="section">
+                                        <div key={section.id} class="document-section slds-m-bottom_medium"> -->
+                                            <!-- Section Header -->
+                                            <!-- <template if:true={section.hasHeader}>
+                                                <h3 class="slds-text-heading_small slds-m-bottom_small">{section.title}</h3>
+                                            </template> -->
+
+                                            <!-- Section Content with Clause Intelligence -->
+                                            <!-- <div class="section-content">
+                                                <template for:each={section.clauses} for:item="clause">
+                                                    <div key={clause.id} class="clause-container slds-m-bottom_small"> -->
+                                                        <!-- Smart Clause with AI Annotations -->
+                                                        <!-- <div class="clause-text" data-clause-id={clause.id}>
+                                                            <div class="slds-text-longform">{clause.content}</div> -->
+                                                            
+                                                            <!-- AI-Powered Clause Insights -->
+                                                            <!-- <template if:true={clause.hasAIInsights}>
+                                                                <div class="clause-insights slds-m-top_x-small">
+                                                                    <lightning-button-icon
+                                                                        icon-name="utility:info"
+                                                                        variant="bare"
+                                                                        size="x-small"
+                                                                        alternative-text="Clause Insights"
+                                                                        title="View AI Analysis"
+                                                                        onclick={handleClauseInsight}
+                                                                        data-clause-id={clause.id}>
+                                                                    </lightning-button-icon>
+                                                                    <span class="slds-text-body_small slds-text-color_weak slds-m-left_x-small">
+                                                                        Risk: {clause.riskLevel} | Confidence: {clause.confidenceScore}%
+                                                                    </span>
+                                                                </div>
+                                                            </template>
+                                                        </div> -->
+
+                                                        <!-- Signature Field Placement -->
+                                                        <!-- <template if:true={clause.requiresSignature}>
+                                                            <div class="signature-field-container slds-m-top_small">
+                                                                <div class="signature-placeholder slds-box slds-theme_inverse-text">
+                                                                    <div class="slds-grid slds-grid_align-spread">
+                                                                        <div class="slds-col">
+                                                                            <p class="slds-text-body_small">Signature Required: {clause.signerRole}</p>
+                                                                            <p class="slds-text-body_small slds-text-color_weak">Authentication: {clause.authMethod}</p>
+                                                                        </div>
+                                                                        <div class="slds-col slds-no-flex">
+                                                                            <template if:false={clause.isSigned}>
+                                                                                <lightning-button
+                                                                                    variant="brand"
+                                                                                    label="Sign Here"
+                                                                                    size="small"
+                                                                                    onclick={handleSignature}
+                                                                                    data-clause-id={clause.id}>
+                                                                                </lightning-button>
+                                                                            </template>
+                                                                            <template if:true={clause.isSigned}>
+                                                                                <div class="signed-indicator">
+                                                                                    <lightning-icon icon-name="utility:success" size="small" variant="success"></lightning-icon>
+                                                                                    <span class="slds-text-color_success slds-m-left_x-small">Signed</span>
+                                                                                </div>
+                                                                            </template>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </div> -->
+
+            <!-- Document Metadata and Compliance Information -->
+            <!-- <div class="document-metadata slds-box slds-theme_shade slds-m-top_large">
+                <h3 class="slds-text-heading_small slds-m-bottom_small">Document Metadata & Compliance</h3>
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <dl class="slds-list_horizontal slds-wrap">
+                            <dt class="slds-item_label slds-text-color_weak">Jurisdiction:</dt>
+                            <dd class="slds-item_detail">{jurisdiction}</dd>
+                            <dt class="slds-item_label slds-text-color_weak">Retention Period:</dt>
+                            <dd class="slds-item_detail">{retentionPeriod}</dd>
+                            <dt class="slds-item_label slds-text-color_weak">Expiration Date:</dt>
+                            <dd class="slds-item_detail">{expirationDate}</dd>
+                        </dl>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <dl class="slds-list_horizontal slds-wrap">
+                            <dt class="slds-item_label slds-text-color_weak">Legal Hold:</dt>
+                            <dd class="slds-item_detail">
+                                <template if:true={isUnderLegalHold}>
+                                    <lightning-badge label="Active" variant="warning"></lightning-badge>
+                                </template>
+                                <template if:false={isUnderLegalHold}>
+                                    <lightning-badge label="None" variant="success"></lightning-badge>
+                                </template>
+                            </dd>
+                            <dt class="slds-item_label slds-text-color_weak">Archive Status:</dt>
+                            <dd class="slds-item_detail">{archiveStatus}</dd>
+                            <dt class="slds-item_label slds-text-color_weak">Hash Integrity:</dt>
+                            <dd class="slds-item_detail">
+                                <lightning-icon icon-name="utility:shield" size="x-small" variant="success"></lightning-icon>
+                                <span class="slds-text-color_success slds-m-left_x-small">Verified</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Advanced Analytics and Behavioral Insights -->
+            <!-- <template if:true={hasAdvancedAnalytics}>
+                <div class="analytics-panel slds-box slds-theme_alt-inverse slds-m-top_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Document Analytics & Insights</h3>
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="metric-card">
+                                <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
+                                <p class="slds-text-heading_small slds-m-top_x-small">{viewCount}</p>
+                                <p class="slds-text-body_small slds-text-color_weak">Total Views</p>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="metric-card">
+                                <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+                                <p class="slds-text-heading_small slds-m-top_x-small">{avgReadTime}</p>
+                                <p class="slds-text-body_small slds-text-color_weak">Avg. Read Time</p>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="metric-card">
+                                <lightning-icon icon-name="utility:people" size="small"></lightning-icon>
+                                <p class="slds-text-heading_small slds-m-top_x-small">{collaboratorCount}</p>
+                                <p class="slds-text-body_small slds-text-color_weak">Collaborators</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template> -->
+
+            <!-- Real-time Collaboration Indicators -->
+            <!-- <template if:true={hasActiveCollaborators}>
+                <div class="collaboration-panel slds-m-top_medium">
+                    <div class="slds-notify slds-notify_alert slds-theme_info">
+                        <span class="slds-assistive-text">Info</span>
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <lightning-icon icon-name="utility:groups" size="x-small" variant="inverse"></lightning-icon>
+                            </div>
+                            <div class="slds-media__body">
+                                <h2>Active Collaboration Session</h2>
+                                <p>{activeCollaborators} users are currently viewing/editing this document</p>
+                                <div class="collaborator-avatars slds-m-top_x-small">
+                                    <template for:each={collaborators} for:item="collaborator">
+                                        <lightning-avatar 
+                                            key={collaborator.id}
+                                            src={collaborator.photoUrl} 
+                                            fallback-icon-name="standard:user"
+                                            alternative-text={collaborator.name}
+                                            size="x-small"
+                                            class="slds-m-right_x-small">
+                                        </lightning-avatar>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template> -->
+
+            <!-- Document Actions Footer -->
+            <!-- <div class="document-actions-footer slds-m-top_large">
+                <div class="slds-grid slds-grid_align-spread">
+                    <div class="slds-col">
+                        <div class="version-info">
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Document ID: {documentId} | Version: {versionNumber} | Last saved: {lastSaved}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-no-flex">
+                        <lightning-button-group>
+                            <lightning-button 
+                                variant="neutral" 
+                                label="Export PDF" 
+                                icon-name="utility:download"
+                                onclick={handleExportPDF}>
+                            </lightning-button>
+                            <lightning-button 
+                                variant="neutral" 
+                                label="Share" 
+                                icon-name="utility:share"
+                                onclick={handleShare}>
+                            </lightning-button>
+                            <template if:true={canEdit}>
+                                <lightning-button 
+                                    variant="brand" 
+                                    label="Edit Document" 
+                                    icon-name="utility:edit"
+                                    onclick={handleEdit}>
+                                </lightning-button>
+                            </template>
+                        </lightning-button-group>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template> -->
+
+
+
+
+
+<!-- version 0 -->
+
+
+
+<!-- <template>
+    <lightning-card title="Document Viewer" icon-name="standard:document">
+        <div class="slds-p-horizontal_medium"> -->
+            
+            <!-- Document Header -->
+            <!-- <div class="document-header slds-m-bottom_medium">
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-2">
+                        <dl class="slds-list_horizontal slds-wrap">
+                            <dt class="slds-item_label slds-text-color_weak">Document:</dt>
+                            <dd class="slds-item_detail slds-truncate">{documentTitle}</dd>
+                            <dt class="slds-item_label slds-text-color_weak">Status:</dt>
+                            <dd class="slds-item_detail">
+                                <lightning-badge label={documentStatus} variant={statusVariant}></lightning-badge>
+                            </dd>
+                            <dt class="slds-item_label slds-text-color_weak">Created:</dt>
+                            <dd class="slds-item_detail">{createdDate}</dd>
+                        </dl>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <div class="document-actions slds-text-align_right">
+                            <lightning-button-group>
+                                <lightning-button 
+                                    variant="neutral" 
+                                    label="Download" 
+                                    onclick={handleDownload}
+                                    icon-name="utility:download">
+                                </lightning-button>
+                                <lightning-button 
+                                    variant="neutral" 
+                                    label="Print" 
+                                    onclick={handlePrint}
+                                    icon-name="utility:print">
+                                </lightning-button>
+                                <template if:true={canSign}>
+                                    <lightning-button 
+                                        variant="brand" 
+                                        label="Sign Document" 
+                                        onclick={handleSignDocument}
+                                        icon-name="utility:signature">
+                                    </lightning-button>
+                                </template>
+                            </lightning-button-group>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Document Content -->
+            <!-- <div class="document-content">
+                <template if:true={isLoading}>
+                    <div class="slds-text-align_center slds-p-vertical_large">
+                        <lightning-spinner alternative-text="Loading document..." size="medium"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}> -->
+                    <!-- PDF Viewer -->
+                    <!-- <template if:true={isPdfDocument}>
+                        <div class="pdf-viewer-container">
+                            <iframe 
+                                src={pdfViewerUrl} 
+                                class="pdf-viewer"
+                                title="Document PDF Viewer">
+                            </iframe>
+                        </div>
+                    </template> -->
+
+                    <!-- HTML Content -->
+                    <!-- <template if:true={isHtmlDocument}>
+                        <div class="html-content" lwc:dom="manual"></div>
+                    </template> -->
+
+                    <!-- Text Content -->
+                    <!-- <template if:true={isTextDocument}> 
+                        <div class="text-content slds-box slds-theme_default">
+                            <div class="slds-text-longform"> -->
+
+                                <!-- Document Header Information -->
+                                <!-- <div class="document-header-info slds-m-bottom_medium">
+                                    <h2 class="slds-text-heading_medium">{documentTitle}</h2>
+                                    <div class="slds-grid slds-gutters slds-m-top_small">
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <span class="slds-text-body_small slds-text-color_weak">Document Type:</span>
+                                            <p class="slds-text-body_regular">{documentType}</p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <span class="slds-text-body_small slds-text-color_weak">Version:</span>
+                                            <p class="slds-text-body_regular">{documentVersion}</p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <span class="slds-text-body_small slds-text-color_weak">Last Modified:</span>
+                                            <p class="slds-text-body_regular">{lastModified}</p>
+                                        </div>
+                                    </div>
+                                </div> -->
+
+                                <!-- AI-Powered Content Analysis Panel -->
+                                <!-- <template if:true={hasAIAnalysis}>
+                                    <div class="ai-analysis-panel slds-box slds-theme_shade slds-m-bottom_medium">
+                                        <div class="slds-media">
+                                            <div class="slds-media__figure">
+                                                <lightning-icon icon-name="utility:einstein" size="small" alternative-text="AI Analysis"></lightning-icon>
+                                            </div>
+                                            <div class="slds-media__body">
+                                                <h3 class="slds-text-heading_small">AI Document Intelligence</h3>
+                                                <div class="slds-grid slds-gutters slds-m-top_small">
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <lightning-badge label={complianceStatus} variant={complianceVariant}></lightning-badge>
+                                                        <p class="slds-text-body_small slds-m-top_x-small">Compliance Score: {complianceScore}%</p>
+                                                    </div>
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <lightning-badge label={riskLevel} variant={riskVariant}></lightning-badge>
+                                                        <p class="slds-text-body_small slds-m-top_x-small">Risk Assessment: {riskScore}/10</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template> -->
+
+                                <!-- Document Sections -->
+                                <!-- <div class="document-body-content">
+                                    <template for:each={documentSections} for:item="section">
+                                        <div key={section.id} class="document-section slds-m-bottom_medium"> -->
+                                            
+                                            <!-- Section Header -->
+                                            <!-- <template if:true={section.hasHeader}>
+                                                <h3 class="slds-text-heading_small slds-m-bottom_small">{section.title}</h3>
+                                            </template> -->
+
+                                            <!-- Section Content -->
+                                            <!-- <div class="section-content">
+                                                <template for:each={section.clauses} for:item="clause">
+                                                    <div key={clause.id} class="clause-container slds-m-bottom_small">
+                                                        <div class="clause-text" data-clause-id={clause.id}>
+                                                            <div class="slds-text-longform">{clause.content}</div> -->
+
+                                                            <!-- AI Insights -->
+                                                            <!-- <template if:true={clause.hasAIInsights}>
+                                                                <div class="clause-insights slds-m-top_x-small">
+                                                                    <lightning-button-icon
+                                                                        icon-name="utility:info"
+                                                                        variant="bare"
+                                                                        size="x-small"
+                                                                        alternative-text="Clause Insights"
+                                                                        title="View AI Analysis"
+                                                                        onclick={handleClauseInsight}
+                                                                        data-clause-id={clause.id}>
+                                                                    </lightning-button-icon>
+                                                                    <span class="slds-text-body_small slds-text-color_weak slds-m-left_x-small">
+                                                                        Risk: {clause.riskLevel} | Confidence: {clause.confidenceScore}%
+                                                                    </span>
+                                                                </div>
+                                                            </template>
+                                                        </div> -->
+
+                                                        <!-- Signature Field -->
+                                                        <!-- <template if:true={clause.requiresSignature}>
+                                                            <div class="signature-field-container slds-m-top_small">
+                                                                <div class="signature-placeholder slds-box slds-theme_inverse-text">
+                                                                    <div class="slds-grid slds-grid_align-spread">
+                                                                        <div class="slds-col">
+                                                                            <p class="slds-text-body_small">Signature Required: {clause.signerRole}</p>
+                                                                            <p class="slds-text-body_small slds-text-color_weak">Authentication: {clause.authMethod}</p>
+                                                                        </div>
+                                                                        <div class="slds-col slds-no-flex">
+                                                                            <template if:false={clause.isSigned}>
+                                                                                <lightning-button
+                                                                                    variant="brand"
+                                                                                    label="Sign Here"
+                                                                                    size="small"
+                                                                                    onclick={handleSignature}
+                                                                                    data-clause-id={clause.id}>
+                                                                                </lightning-button>
+                                                                            </template>
+                                                                            <template if:true={clause.isSigned}>
+                                                                                <div class="signed-indicator">
+                                                                                    <lightning-icon icon-name="utility:success" size="small" variant="success"></lightning-icon>
+                                                                                    <span class="slds-text-color_success slds-m-left_x-small">Signed</span>
+                                                                                </div>
+                                                                            </template>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div> -->
+
+                                <!-- Document Metadata -->
+                                <!-- <div class="document-metadata slds-box slds-theme_shade slds-m-top_large">
+                                    <h3 class="slds-text-heading_small slds-m-bottom_small">Document Metadata & Compliance</h3>
+                                    <div class="slds-grid slds-gutters">
+                                        <div class="slds-col slds-size_1-of-2">
+                                            <dl class="slds-list_horizontal slds-wrap">
+                                                <dt class="slds-item_label slds-text-color_weak">Jurisdiction:</dt>
+                                                <dd class="slds-item_detail">{jurisdiction}</dd>
+                                                <dt class="slds-item_label slds-text-color_weak">Retention Period:</dt>
+                                                <dd class="slds-item_detail">{retentionPeriod}</dd>
+                                                <dt class="slds-item_label slds-text-color_weak">Expiration Date:</dt>
+                                                <dd class="slds-item_detail">{expirationDate}</dd>
+                                            </dl>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-2">
+                                            <dl class="slds-list_horizontal slds-wrap">
+                                                <dt class="slds-item_label slds-text-color_weak">Legal Hold:</dt>
+                                                <dd class="slds-item_detail">
+                                                    <template if:true={isUnderLegalHold}>
+                                                        <lightning-badge label="Active" variant="warning"></lightning-badge>
+                                                    </template>
+                                                    <template if:false={isUnderLegalHold}>
+                                                        <lightning-badge label="None" variant="success"></lightning-badge>
+                                                    </template>
+                                                </dd>
+                                                <dt class="slds-item_label slds-text-color_weak">Archive Status:</dt>
+                                                <dd class="slds-item_detail">{archiveStatus}</dd>
+                                                <dt class="slds-item_label slds-text-color_weak">Hash Integrity:</dt>
+                                                <dd class="slds-item_detail">
+                                                    <lightning-icon icon-name="utility:shield" size="x-small" variant="success"></lightning-icon>
+                                                    <span class="slds-text-color_success slds-m-left_x-small">Verified</span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div> -->
+
+                                <!-- Advanced Analytics -->
+                                <!-- <template if:true={hasAdvancedAnalytics}>
+                                    <div class="analytics-panel slds-box slds-theme_alt-inverse slds-m-top_medium">
+                                        <h3 class="slds-text-heading_small slds-m-bottom_small">Document Analytics & Insights</h3>
+                                        <div class="slds-grid slds-gutters">
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="metric-card">
+                                                    <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
+                                                    <p class="slds-text-heading_small slds-m-top_x-small">{viewCount}</p>
+                                                    <p class="slds-text-body_small slds-text-color_weak">Total Views</p>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="metric-card">
+                                                    <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+                                                    <p class="slds-text-heading_small slds-m-top_x-small">{avgReadTime}</p>
+                                                    <p class="slds-text-body_small slds-text-color_weak">Avg. Read Time</p>
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-3">
+                                                <div class="metric-card">
+                                                    <lightning-icon icon-name="utility:people" size="small"></lightning-icon>
+                                                    <p class="slds-text-heading_small slds-m-top_x-small">{collaboratorCount}</p>
+                                                    <p class="slds-text-body_small slds-text-color_weak">Collaborators</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template> -->
+
+                                <!-- Collaboration Panel -->
+                                <!-- <template if:true={hasActiveCollaborators}>
+                                    <div class="collaboration-panel slds-m-top_medium">
+                                        <div class="slds-notify slds-notify_alert slds-theme_info">
+                                            <span class="slds-assistive-text">Info</span>
+                                            <div class="slds-media">
+                                                <div class="slds-media__figure">
+                                                    <lightning-icon icon-name="utility:groups" size="x-small" variant="inverse"></lightning-icon>
+                                                </div>
+                                                <div class="slds-media__body">
+                                                    <h2>Active Collaboration Session</h2>
+                                                    <p>{activeCollaborators} users are currently viewing/editing this document</p>
+                                                    <div class="collaborator-avatars slds-m-top_x-small">
+                                                        <template for:each={collaborators} for:item="collaborator">
+                                                            <lightning-avatar 
+                                                                key={collaborator.id}
+                                                                src={collaborator.photoUrl} 
+                                                                fallback-icon-name="standard:user"
+                                                                alternative-text={collaborator.name}
+                                                                size="x-small"
+                                                                class="slds-m-right_x-small">
+                                                            </lightning-avatar>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template> -->
+
+                                <!-- Document Footer -->
+                                <!-- <div class="document-actions-footer slds-m-top_large">
+                                    <div class="slds-grid slds-grid_align-spread">
+                                        <div class="slds-col">
+                                            <p class="slds-text-body_small slds-text-color_weak">
+                                                Document ID: {documentId} | Version: {versionNumber} | Last saved: {lastSaved}
+                                            </p>
+                                        </div>
+                                        <div class="slds-col slds-no-flex">
+                                            <lightning-button-group>
+                                                <lightning-button 
+                                                    variant="neutral" 
+                                                    label="Export PDF" 
+                                                    icon-name="utility:download"
+                                                    onclick={handleExportPDF}>
+                                                </lightning-button>
+                                                <lightning-button 
+                                                    variant="neutral" 
+                                                    label="Share" 
+                                                    icon-name="utility:share"
+                                                    onclick={handleShare}>
+                                                </lightning-button>
+                                                <template if:true={canEdit}>
+                                                    <lightning-button 
+                                                        variant="brand" 
+                                                        label="Edit Document" 
+                                                        icon-name="utility:edit"
+                                                        onclick={handleEdit}>
+                                                    </lightning-button>
+                                                </template>
+                                            </lightning-button-group>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template> -->

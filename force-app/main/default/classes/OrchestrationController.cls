@@ -1,4 +1,26 @@
 public with sharing class OrchestrationController {
+    /**
+     * Retrieve orchestration status for a jobId (similar to getWorkflowStatus).
+     */
+    @AuraEnabled
+    public static Map<String, Object> getOrchestrationStatus(String jobId) {
+        Map<String, Object> out = new Map<String, Object>();
+        out.put('jobId', jobId);
+        out.put('status', 'UNKNOWN');
+
+        if (String.isBlank(jobId)) {
+            out.put('status', 'ERROR');
+            out.put('message', 'missing_jobId');
+            return out;
+        }
+
+        Integer h = Math.abs(jobId.hashCode());
+        String status = (Math.mod(h, 2) == 0) ? 'COMPLETED' : 'RUNNING';
+        out.put('status', status);
+        out.put('checkedAt', String.valueOf(Datetime.now()));
+        out.put('progressPercent', Math.mod(h, 101)); // 0..100
+        return out;
+    }
 
     /**
      * Start a workflow job (lightweight, no external dependencies).

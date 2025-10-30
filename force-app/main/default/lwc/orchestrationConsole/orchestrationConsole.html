@@ -1,0 +1,114 @@
+<template>
+    <lightning-card title="Orchestration Console" icon-name="standard:flow">
+        <lightning-button-group slot="actions">
+            <lightning-button 
+                label="Refresh" 
+                icon-name="utility:refresh" 
+                onclick={fetchStatus} 
+                disabled={isLoading}>
+            </lightning-button>
+
+            <template if:true={showStartButton}>
+                <lightning-button 
+                    label="Start New Orchestration" 
+                    variant="brand" 
+                    icon-name="utility:play"
+                    onclick={handleStart}
+                    disabled={isLoading}>
+                </lightning-button>
+            </template>
+        </lightning-button-group>
+
+        <div class="slds-p-around_medium">
+            
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error Panel -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <lightning-icon icon-name="utility:error" alternative-text="Error!" variant="inverse" size="small"></lightning-icon>
+                    <h2 class="slds-m-left_small">{error}</h2>
+                </div>
+            </template>
+
+            <!-- No Orchestration State -->
+            <template if:false={hasOrchestration}>
+                <div class="slds-text-align_center slds-p-vertical_large">
+                    <p class="slds-text-color_weak">
+                        No orchestration has been initiated. Click "Start New Orchestration" to begin.
+                    </p>
+                </div>
+            </template>
+
+            <!-- Orchestration Details -->
+            <template if:true={hasOrchestration}>
+                
+                <!-- Header Status -->
+                <div class="slds-media slds-m-bottom_medium">
+                    <div class="slds-media__body">
+                        <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                            <div>
+                                <h2 class="slds-text-heading_medium">Orchestration Status</h2>
+                                <p class="slds-text-body_small slds-text-color_weak">Run ID: {assemblyRunId}</p>
+                            </div>
+                            <lightning-badge label={orchestration.status} variant={overallStatusVariant} class="slds-badge_large"></lightning-badge>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="slds-grid slds-gutters slds-m-bottom_large">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                        <lightning-tile label="Total Duration">
+                            <p class="slds-text-heading_medium">{orchestration.duration}</p>
+                        </lightning-tile>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                        <lightning-tile label="Phases Executed">
+                            <p class="slds-text-heading_medium">{orchestration.phasesExecuted}</p>
+                        </lightning-tile>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                        <lightning-tile label="Success/Failure">
+                            <p class="slds-text-heading_medium">
+                                <span class="slds-text-color_success">{orchestration.successfulPhases}</span> / 
+                                <span class="slds-text-color_error">{orchestration.failedPhases}</span>
+                            </p>
+                        </lightning-tile>
+                    </div>
+                </div>
+
+                <!-- Steps/Phases -->
+                <h3 class="slds-text-heading_small slds-m-bottom_medium">Orchestration Phases</h3>
+                <div class="slds-progress slds-progress_vertical">
+                    <ol class="slds-progress__list">
+                        <template for:each={orchestration.steps} for:item="step">
+                            <li key={step.phaseName} class="slds-progress__item">
+                                <div class="slds-progress__marker">
+                                    <lightning-icon icon-name={step.icon} size="x-small" variant="inverse"></lightning-icon>
+                                </div>
+                                <div class="slds-progress__item_content slds-grid slds-grid_align-spread">
+                                    <div class="slds-text-title">{step.phaseName}</div>
+                                    <div class="slds-text-body_small slds-text-color_weak">{step.message}</div>
+                                </div>
+                            </li>
+                        </template>
+                    </ol>
+                </div>
+            </template>
+        </div>
+
+        <div slot="footer" class="slds-text-align_right slds-text-color_weak slds-text-body_small">
+            <template if:true={isRunning}>
+                <lightning-spinner size="x-small" alternative-text="Polling"></lightning-spinner>
+                <span class="slds-m-left_x-small">Polling for updates...</span>
+            </template>
+            {lastRefreshedFormatted}
+        </div>
+    </lightning-card>
+</template>

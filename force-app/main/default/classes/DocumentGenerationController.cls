@@ -1,5 +1,25 @@
 public with sharing class DocumentGenerationController {
     /**
+     * Returns a preview for a document template and data (similar to preview method).
+     */
+    @AuraEnabled
+    public static Map<String, Object> getPreview(Id templateId, Map<String, Object> data) {
+        Map<String, Object> out = new Map<String, Object>{'ok'=>false,'message'=>null,'previewUrl'=>null};
+        try {
+            DocumentLifecycleDeploymentManager.AssemblyResult r = DocumentLifecycleDeploymentManager.assembleDocument(templateId, data);
+            if (r == null || !r.ok) {
+                out.put('message', 'assembly failed');
+                return out;
+            }
+            out.put('ok', true);
+            out.put('previewUrl', '/sfc/servlet.shepherd/version/download/' + String.valueOf(r.contentVersionId));
+            return out;
+        } catch (Exception ex) {
+            out.put('message', ex.getMessage());
+            return out;
+        }
+    }
+    /**
      * Creates a signature request for a generated document and returns the request Id.
      */
     @AuraEnabled

@@ -1,0 +1,61 @@
+/* File: force-app/main/default/lwc/systemHealthDashboard/systemHealthDashboard.css */
+
+/* Health Score Display */
+.health-score {
+    text-align: center;
+}
+
+/* Progress Bar Spacing */
+.slds-progress-bar {
+    margin-bottom: 0.25rem;
+}
+
+/* Component Status Card */
+.component-status-card {
+    border-left: 3px solid;
+}
+
+.component-status-card.healthy {
+    border-left-color: #04844b; /* Green */
+}
+
+.component-status-card.warning {
+    border-left-color: #fe9339; /* Orange */
+}
+
+.component-status-card.error {
+    border-left-color: #c23934; /* Red */
+}
+
+/* Metric Tile */
+.metric-tile {
+    text-align: center;
+    padding: 1rem;
+    background: #f3f3f3;
+    border-radius: 0.25rem;
+}
+
+/* Health Indicator (Badge + Label inline) */
+.health-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* System Status Grid Layout */
+.system-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Recommendations List */
+.recommendation-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.recommendation-item:last-child {
+    border-bottom: none;
+}

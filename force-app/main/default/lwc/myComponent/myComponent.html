@@ -1,0 +1,41 @@
+<!-- myComponent.html -->
+<template>
+    <lightning-card title="Force Rollup Recalculation" icon-name="utility:refresh">
+        <div class="slds-p-around_medium">
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-is-relative" style="height: 5rem;">
+                    <lightning-spinner alternative-text="Recalculating..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Main Content -->
+            <template if:false={isLoading}>
+                <p class="slds-m-bottom_medium">
+                    Click the button below to force a full recalculation of rollup summaries for this record. This may take a moment to complete.
+                </p>
+                <lightning-button
+                    label="Run Recalculation"
+                    variant="brand"
+                    onclick={handleRecalculate}
+                    disabled={isLoading}
+                    icon-name="utility:play">
+                </lightning-button>
+            </template>
+
+            <!-- Error Panel -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_medium" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <span class="slds-icon_container slds-icon-utility-error slds-m-right_x-small" title="Error">
+                        <lightning-icon icon-name="utility:error" alternative-text="Error!" variant="inverse" size="x-small"></lightning-icon>
+                    </span>
+                    <h2>An error occurred: {error}</h2>
+                </div>
+            </template>
+        </div>
+        <p slot="footer" class="slds-text-body_small slds-text-color_weak">
+            Recalculation affects all related rollup summary fields.
+        </p>
+    </lightning-card>
+</template>
