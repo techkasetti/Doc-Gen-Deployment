@@ -2,70 +2,104 @@
   @description       : 
   @author            : ChangeMeIn@UserSettingsUnder.SFDoc
   @group             : 
-  @last modified on  : 11-24-2025
+  @last modified on  : 11-27-2025
   @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 -->
 <template>
+    <lightning-card title="AI Model Configuration" icon-name="standard:einstein">
+        <lightning-button-icon icon-name="utility:refresh" slot="actions" label="Refresh" title="Refresh Model List"
+            onclick={handleRefreshModels}></lightning-button-icon>
 
-    <!-- Header -->
-    <div class="slds-box slds-m-bottom_large">
-        <div class="slds-grid slds-wrap">
-            <div class="slds-col slds-size_1-of-1">
-                <div class="slds-text-heading_medium slds-m-bottom_x-small">
-                    AI Model Configuration
+        <div class="slds-p-around_medium">
+            <p class="slds-m-bottom_small">Configure and test available AI models for document generation.</p>
+            <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_medium">
+                Last Updated: {lastUpdated}
+            </p>
+
+            <!-- AI Models Table -->
+            <lightning-datatable 
+                key-field="id" 
+                data={aiModels} 
+                columns={columns} 
+                onsort={handleSort}
+                sorted-by={sortedBy} 
+                sorted-direction={sortedDirection} 
+                onrowaction={handleRowAction}
+                hide-checkbox-column>
+            </lightning-datatable>
+            <template if:true={showHelp}>
+                <div class="slds-box slds-m-top_medium slds-theme_info">
+                    <p>No AI models found. Please configure AI Model Configuration metadata types in Setup.</p>
                 </div>
+            </template>
+        </div>
 
-                <div class="slds-text-body_small slds-text-color_weak">
-                    Configure available AI models for document generation
+        <!-- Test Model Connection Section -->
+        <template if:true={showTestSection}>
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                <h3 class="slds-text-heading_medium slds-m-bottom_medium">Test Model Connection</h3>
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-3">
+                        <lightning-combobox name="testModel" label="Select Model to Test"
+                            value={selectedTestModel} placeholder="Select a model" options={modelTestOptions}
+                            onchange={handleTestModelSelection}></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_2-of-3">
+                        <lightning-textarea name="testPrompt" label="Test Prompt" value={testPrompt}
+                            onchange={handleTestPromptChange}></lightning-textarea>
+                    </div>
+                </div>
+                <lightning-button label="Run Test" title="Run connection test" onclick={handleTestConnection}
+                    disabled={testButtonDisabled} class="slds-m-top_medium">
+                </lightning-button>
+
+                <!-- Test Spinner and Result Display -->
+                <div class="slds-m-top_medium">
+                    <template if:true={isTestRunning}>
+                        <lightning-spinner alternative-text="Testing..." size="medium"></lightning-spinner>
+                    </template>
+                    <template if:true={testResult}>
+                        <div class={testResultClass} role="status">
+                            <div class="slds-media slds-media_center">
+                                <div class="slds-media__figure">
+                                    <lightning-icon icon-name={testResultIcon} alternative-text="Result"
+                                        variant={testResultIconVariant} size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h3 class="slds-text-heading_small">{testResultTitle}</h3>
+                                    <p>{testResult}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={testMetrics}>
+                        <div class="slds-box slds-box_small slds-m-top_small slds-theme_default">
+                            <p><strong>Response Time:</strong> {testMetrics.responseTime} ms</p>
+                            <p><strong>Status:</strong> {testMetrics.status}</p>
+                            <p><strong>Model Version:</strong> {testMetrics.version}</p>
+                            <p><strong>Timestamp:</strong> {testMetrics.timestamp}</p>
+                        </div>
+                    </template>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- AI Models Table -->
-    <lightning-datatable
-        key-field="id"
-        data={aiModels}
-        columns={columns}
-        hide-checkbox-column="true"
-        onrowaction={handleRowAction}
-        sorted-by={sortedBy}
-        sorted-direction={sortDirection}
-        onsort={handleSort}>
-    </lightning-datatable>
-
-    <!-- Test Model Connection Section -->
-    <div class="slds-section slds-is-open slds-m-top_large">
-        <h3 class="slds-section__title">
-            <span class="slds-truncate">Test Model Connection</span>
-        </h3>
-
-        <div class="slds-section__content">
-            <div class="slds-grid slds-gutters">
-
-                <!-- Model Picklist -->
-                <div class="slds-col slds-size_1-of-2">
-                    <lightning-combobox
-                        name="testModel"
-                        label="Select Model to Test"
-                        value={selectedTestModel}
-                        options={modelTestOptions}
-                        onchange={handleTestModelChange}>
-                    </lightning-combobox>
-                </div>
-
-                <!-- Prompt Input -->
-                <div class="slds-col slds-size_1-of-2">
-                    <lightning-textarea
-                        name="testPrompt"
-                        label="Test Prompt"
-                        value={testPrompt}
-                        onchange={handleTestPromptChange}>
-                    </lightning-textarea>
-                </div>
-
+        </template>
+        
+        <!-- Test History Section -->
+        <template if:true={showTestHistory}>
+            <div class="slds-p-horizontal_medium slds-p-bottom_large">
+                <h3 class="slds-text-heading_medium slds-m-bottom_medium">Recent Test History (Last 10)</h3>
+                <ul>
+                    <template for:each={testHistory} for:item="entry">
+                        <li key={entry.id} class="slds-item slds-p-vertical_x-small slds-border_bottom">
+                            <p>
+                                <strong class={entry.statusClass}>{entry.status}</strong> on <strong>{entry.modelName}</strong>
+                                <span class="slds-float_right slds-text-color_weak">{entry.timestamp}</span>
+                            </p>
+                            <p class="slds-text-body_small">Response Time: {entry.responseTime} ms</p>
+                        </li>
+                    </template>
+                </ul>
             </div>
-        </div>
-    </div>
-
+        </template>
+    </lightning-card>
 </template>
