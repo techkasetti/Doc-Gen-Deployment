@@ -1,0 +1,101 @@
+<!-- @description : Document Generation Wizard UI @author : yourname@example.com @last modified on : 11-20-2025 -->
+<template>
+    <lightning-card title="Document Generation Wizard" icon-name="standard:document">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Processing..." size="medium"></lightning-spinner>
+        </template>
+
+        <!-- Success Screen -->
+        <template if:true={generationComplete}>
+            <div class="slds-p-around_medium slds-text-align_center">
+                <lightning-icon icon-name="utility:success" size="large" variant="success"></lightning-icon>
+                <h3 class="slds-text-heading_medium slds-m-top_medium">Document Generated Successfully!</h3>
+                <p class="slds-m-vertical_medium">You can now view or download the document, or start a new one.</p>
+                <lightning-button-group>
+                    <!-- NEW: Download Button -->
+                    <lightning-button
+                        variant="brand"
+                        label="Download Document"
+                        title="Download the generated document file"
+                        onclick={handleDownloadDocument}
+                        icon-name="utility:download">
+                    </lightning-button>
+                    <lightning-button
+                        variant="neutral"
+                        label="View Document"
+                        title="View the generated document in the file previewer"
+                        onclick={handleViewDocument}>
+                    </lightning-button>
+                    <lightning-button
+                        variant="success"
+                        label="Generate New"
+                        title="Start a new document generation"
+                        onclick={handleGenerateNew}
+                        icon-name="utility:add">
+                    </lightning-button>
+                </lightning-button-group>
+            </div>
+        </template>
+
+        <!-- Wizard Steps -->
+        <template if:false={generationComplete}>
+            <!-- Step 1: Configuration -->
+            <template if:true={isStep1}>
+                <div class="slds-p-around_medium">
+                    <h3 class="slds-text-heading_medium slds-m-bottom_medium">Step 1: Select Template and Data</h3>
+                    <lightning-combobox
+                        name="template"
+                        label="Select a Document Template"
+                        value={selectedTemplateId}
+                        placeholder="Choose a template..."
+                        options={templateOptions}
+                        onchange={handleTemplateChange}
+                        required>
+                    </lightning-combobox>
+                    <lightning-textarea
+                        name="jsonData"
+                        label="Enter JSON Data"
+                        value={jsonData}
+                        onchange={handleJsonChange}
+                        class="slds-m-top_medium"
+                        required>
+                    </lightning-textarea>
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button variant="brand" label="Preview Document" onclick={handlePreviewClick}></lightning-button>
+                    </div>
+                </div>
+            </template>
+            <!-- Step 2: Preview and Generate -->
+            <template if:true={isStep2}>
+                <div class="slds-p-around_medium">
+                    <h3 class="slds-text-heading_medium slds-m-bottom_medium">Step 2: Review and Generate</h3>
+                    <template if:true={hasValidationErrors}>
+                        <div class="slds-box slds-theme_error slds-m-bottom_medium">
+                            <h4 class="slds-text-heading_small">Validation Errors Found</h4>
+                            <ul>
+                                <template for:each={validationErrors} for:item="error">
+                                    <li key={error}>{error}</li>
+                                </template>
+                            </ul>
+                        </div>
+                    </template>
+                    <template if:true={previewHtml}>
+                        <div class="slds-box slds-theme_default">
+                            <lightning-formatted-rich-text value={previewHtml}></lightning-formatted-rich-text>
+                        </div>
+                    </template>
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button variant="neutral" label="Back" onclick={handleBackClick}></lightning-button>
+                        <lightning-button
+                            variant="brand"
+                            label="Generate Final Document"
+                            onclick={handleGenerateClick}
+                            disabled={hasValidationErrors}
+                            class="slds-m-left_x-small">
+                        </lightning-button>
+                    </div>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

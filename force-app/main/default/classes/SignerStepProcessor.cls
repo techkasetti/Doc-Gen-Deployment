@@ -1,1 +1,0 @@
-public class SignerStepProcessor implements Queueable, Database.AllowsCallouts { public void execute(QueueableContext c) { /* TODO */ } }

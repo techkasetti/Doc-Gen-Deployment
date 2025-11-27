@@ -1,0 +1,79 @@
+<!--
+@description : Displays the content, signature status, and audit trail for a generated document.
+@author      : Anara AI
+@last modified on : 11-20-2025
+-->
+<template>
+    <lightning-card title={documentTitle} icon-name="standard:document">
+        <!-- Action Buttons -->
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button 
+                    label="Download" 
+                    onclick={handleDownload} 
+                    disabled={isLoading}>
+                </lightning-button>
+                <lightning-button 
+                    variant="brand" 
+                    label="Request Signature" 
+                    onclick={handleRequestSignature} 
+                    disabled={isLoading}>
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="slds-p-around_medium">
+                <lightning-spinner alternative-text="Loading document details..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Main Content -->
+        <template if:false={isLoading}>
+            <div class="slds-grid slds-p-around_medium">
+                <!-- Left Column: Document Content -->
+                <div class="slds-col slds-size_2-of-3 slds-p-right_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Document Content</h3>
+                    <div class="slds-box slds-box_x-small slds-theme_default document-content">
+                        <lightning-formatted-rich-text value={renderedContent}></lightning-formatted-rich-text>
+                    </div>
+                </div>
+
+                <!-- Right Column: Details -->
+                <div class="slds-col slds-size_1-of-3">
+                    <!-- Signature Details -->
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Signature Details</h3>
+                    <div class="slds-box slds-box_x-small slds-theme_default slds-m-bottom_medium">
+                        <template if:true={hasSignatureRequest}>
+                            <p><strong>Status:</strong> {signatureStatus}</p>
+                            <p><strong>Method:</strong> {signatureMethod}</p>
+                            <p><strong>Signed Date:</strong>
+                                <lightning-formatted-date-time value={signedDate}></lightning-formatted-date-time>
+                            </p>
+                        </template>
+                        <template if:false={hasSignatureRequest}>
+                            <p>No signature request has been sent for this document.</p>
+                        </template>
+                    </div>
+
+                    <!-- Audit Trail -->
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Audit Trail</h3>
+                    <div class="slds-box slds-box_x-small slds-theme_default">
+                        <template if:true={auditTrails}>
+                            <lightning-datatable 
+                                key-field="Id" 
+                                data={auditTrails} 
+                                columns={columns}
+                                hide-checkbox-column="true">
+                            </lightning-datatable>
+                        </template>
+                        <template if:false={auditTrails}>
+                            <p>No audit records found.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>

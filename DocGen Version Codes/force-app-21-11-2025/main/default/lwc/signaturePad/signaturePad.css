@@ -1,0 +1,35 @@
+.signature-canvas {
+    border: 1px dashed #c9c9c9;
+    background-color: #f4f4f4;
+    cursor: crosshair;
+    border-radius: 4px;
+}
+
+.draw-container {
+    position: relative;
+    border-radius: 4px;
+}
+
+.clear-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.typed-preview {
+    font-family: 'Cedarville Cursive', cursive; /* A nice handwriting font */
+    font-size: 2.5rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    background-color: #fafafa;
+    min-height: 100px;
+    border-radius: 4px;
+}
+
+.signature-preview-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #e0e0e0;
+    background-color: #fafafa;
+    border-radius: 4px;
+}

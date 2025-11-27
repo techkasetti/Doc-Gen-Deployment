@@ -1,68 +1,221 @@
+/**
+* @description   Manages AI model configurations and orchestrates AI processing requests.
+*                Acts as the central hub for retrieving available models and routing
+*                generation/analysis requests to the appropriate provider (Einstein, OpenAI, etc.).
+* @author        Anara AI
+* @version       3.1
+* @last modified 11-25-2025
+*/
+
 public with sharing class AIModelManager {
-    // Typed model config used by UI controllers and Apex callers
+    
+    //======================================================
+    // DTO WRAPPER CLASS FOR AI MODELS
+    //======================================================
     public class AIModelConfig {
-        @AuraEnabled public String modelId { get; set; }
-        @AuraEnabled public String modelName { get; set; }
-        @AuraEnabled public String provider { get; set; }
-        @AuraEnabled public String capabilities { get; set; }
-        @AuraEnabled public Integer contextWindow { get; set; }
-
-        public AIModelConfig() {}
-
-        public AIModelConfig(String id, String name, String provider, String capabilities, Integer contextWindow) {
-            this.modelId = id;
-            this.modelName = name;
-            this.provider = provider;
-            this.capabilities = capabilities;
-            this.contextWindow = contextWindow;
+        
+        @AuraEnabled public String modelName        { get; set; }
+        @AuraEnabled public String modelIdentifier  { get; set; }
+        @AuraEnabled public String provider         { get; set; }
+        @AuraEnabled public String capabilities     { get; set; }
+        @AuraEnabled public Boolean isActive        { get; set; }   // Added for ClauseGenerator checks
+        
+        // Construct from Custom Metadata record
+        public AIModelConfig(AI_Model_Configuration__mdt config) {
+            this.modelName       = config.ModelName__c;
+            this.modelIdentifier = config.Model_Id__c;
+            this.provider        = config.Provider__c;
+            this.capabilities    = config.Capabilities__c;
+            this.isActive        = config.Is_Active__c;
+        }
+        
+        // Construct for hardcoded native Einstein models
+        public AIModelConfig(String name, String identifier, String provider, String capabilities) {
+            this.modelName       = name;
+            this.modelIdentifier = identifier;
+            this.provider        = provider;
+            this.capabilities    = capabilities;
+            this.isActive        = true;     // Native models are always active
         }
     }
-
-    /**
-     * Returns a typed list of AIModelConfig.
-     * It tries to read AI_Model_Configuration__mdt via dynamic SOQL (so compilation doesn't require the metadata type),
-     * and falls back to safe built-in entries if none are found or the query fails at runtime.
-     */
+    
+    //======================================================
+    // GET AVAILABLE AI MODELS (for UI dropdown)
+    //======================================================
     @AuraEnabled(cacheable=true)
     public static List<AIModelConfig> getAvailableAIModels() {
-        List<AIModelConfig> out = new List<AIModelConfig>();
+        List<AIModelConfig> models = new List<AIModelConfig>();
+        
         try {
-            // Use dynamic SOQL to avoid compile-time dependency on the metadata type existing in every org.
-            String mdQuery = 'SELECT DeveloperName, Label, Model_Provider__c, Capabilities__c, Context_Window_Size__c FROM AI_Model_Configuration__mdt WHERE Is_Active__c = true ORDER BY Sort_Order__c NULLS LAST, Label';
-            List<SObject> rows = (List<SObject>) Database.query(mdQuery);
-            for (SObject s : rows) {
-                String devName = (String) s.get('DeveloperName');
-                String label = (String) s.get('Label');
-                String provider = (String) s.get('Model_Provider__c');
-                String caps = (String) s.get('Capabilities__c');
-                Integer ctx = 0;
-                Object ctxObj = s.get('Context_Window_Size__c');
-                if (ctxObj != null) {
-                    try { ctx = Integer.valueOf(String.valueOf(ctxObj)); } catch (Exception ex) { ctx = 0; }
+            // From Custom Metadata
+            for (AI_Model_Configuration__mdt config :
+                 [SELECT ModelName__c, Model_Id__c, Provider__c, Capabilities__c, Is_Active__c
+                  FROM AI_Model_Configuration__mdt
+                  WHERE Is_Active__c = true
+                  ORDER BY ModelName__c]
+                ) {
+                    models.add(new AIModelConfig(config));
                 }
-                out.add(new AIModelConfig(devName, label, provider, caps, ctx));
-            }
+               
+            // Add hardcoded Einstein models
+            models.add(new AIModelConfig('Einstein Intent Detection',
+                                         'einstein_intent',
+                                         'Salesforce',
+                                         'Intent Analysis, Classification'));
+            
+            models.add(new AIModelConfig('Einstein Sentiment Analysis',
+                                         'einstein_sentiment',
+                                         'Salesforce',
+                                         'Sentiment Analysis, Emotion Detection'));
+            
+            models.add(new AIModelConfig('Einstein OCR',
+                                         'einstein_ocr',
+                                         'Salesforce',
+                                         'Text Extraction, Document Parsing'));
+            
         } catch (Exception e) {
-            // Dynamic query failure is non-fatal — fall back to built-ins
-            System.debug('AIModelManager.getAvailableAIModels: metadata query failed or metadata missing: ' + e.getMessage());
+            System.debug(LoggingLevel.ERROR,
+                         'Error retrieving AI models: ' + e.getMessage());
+            throw new AuraHandledException('Failed to retrieve AI models: ' + e.getMessage());
         }
-
-        // Provide safe fallback models if none found
-        if (out.isEmpty()) {
-            out.add(new AIModelConfig('einstein_gpt_default', 'Einstein GPT (fallback)', 'Salesforce', 'generation,analysis', 4000));
-            out.add(new AIModelConfig('external_gpt_fallback', 'External GPT (fallback)', 'External', 'generation', 8000));
-        }
-        return out;
+        
+        return models;
     }
-
-    // Helper: returns a single typed model config by id (or null)
+    
+    //======================================================
+    // GET AI MODEL BY IDENTIFIER (Used by ClauseGenerator)
+    //======================================================
+    /**
+* @description   Finds an AI model by its unique identifier.
+* @param         modelIdentifier
+* @return        AIModelConfig or null
+*/
+    public static AIModelConfig getAIModelByIdentifier(String modelIdentifier) {
+        if (String.isBlank(modelIdentifier)) {
+            return null;
+        }
+        
+        for (AIModelConfig model : getAvailableAIModels()) {
+            if (model.modelIdentifier == modelIdentifier) {
+                return model;
+            }
+        }
+        
+        return null;  // Model not found
+    }
+    
+    //======================================================
+    // MAIN AI PROCESSING ROUTER
+    //======================================================
     @AuraEnabled
-    public static AIModelConfig getModelById(String modelId) {
-        if (String.isBlank(modelId)) return null;
-        for (AIModelConfig c : getAvailableAIModels()) {
-            if (c.modelId == modelId) return c;
+    public static String processWithEinstein(String modelId, String prompt, String context) {
+        try {
+            AI_Model_Configuration__mdt modelConfig = getModelConfiguration(modelId);
+            system.debug('modelConfig::::'+modelConfig);
+            System.debug('modelConfig != null:::::'+modelConfig != null);
+            if (modelConfig != null) {
+                system.debug('modelConfig.Model_Provider__c:::::'+modelConfig.Model_Provider__c);
+                if (modelConfig.Model_Provider__c == 'einstein_intent') {
+                    System.debug('inside if condition::::');
+                    return processWithEinsteinNative(prompt, context, modelConfig);
+                } else if (modelConfig.Model_Provider__c == 'OpenAI') {
+                    throw new AIProcessingException('OpenAI provider not yet implemented.');
+                    
+                } else {
+                    throw new AIProcessingException('Unsupported model provider: ' +
+                                                    modelConfig.Model_Provider__c);
+                }
+                
+            } else if (modelId.startsWith('einstein_')) {
+                return processWithEinsteinNative(prompt, context, null);
+            }
+            
+            throw new AIProcessingException('Model configuration not found for ID: ' + modelId);
+            
+        } catch (Exception e) {
+            throw new AuraHandledException('AI processing failed: ' + e.getMessage());
         }
-        return null;
+    }
+    
+    //======================================================
+    // EINSTEIN PLATFORM SERVICES INTEGRATION
+    //======================================================
+   private static String processWithEinsteinNative(
+    String prompt,
+    String context,
+    AI_Model_Configuration__mdt config
+) {
+    System.debug('prompt::::' + prompt);
+    System.debug('context:::' + context);
+    System.debug('config::::' + config);
+
+    HttpRequest req = new HttpRequest();
+    req.setEndpoint('callout:OpenAI/v1/chat/completions'); 
+    req.setMethod('POST');
+    req.setHeader('Content-Type', 'application/json');
+    // ✅ No Authorization header (Named Credential handles it)
+
+    Map<String, Object> body = new Map<String, Object>{
+        'model' => 'gpt-4o-mini',   // ✅ HARDCODED VALID MODEL
+        'messages' => new List<Object>{
+            new Map<String, Object>{
+                'role' => 'user',
+                'content' => prompt + '\n\nContext:\n' + context
+            }
+        }
+    };
+
+    req.setBody(JSON.serialize(body));
+
+    Http http = new Http();
+    HttpResponse response = http.send(req);
+
+    // ✅ Debug full response
+    System.debug('STATUS CODE: ' + response.getStatusCode());
+    System.debug('RAW RESPONSE: ' + response.getBody());
+
+    if (response.getStatusCode() == 200) {
+        Map<String, Object> result =
+            (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+
+        List<Object> choices = (List<Object>) result.get('choices');
+        Map<String, Object> firstChoice =
+            (Map<String, Object>) choices[0];
+        Map<String, Object> message =
+            (Map<String, Object>) firstChoice.get('message');
+
+        return (String) message.get('content');
     }
 
+    throw new AIProcessingException(
+        'OpenAI API failed with status ' +
+        response.getStatusCode() +
+        ' | Response: ' + response.getBody()
+    );
+}
+
+    
+    
+    //======================================================
+    // HELPER METHODS
+    //======================================================
+    private static AI_Model_Configuration__mdt getModelConfiguration(String modelId) {
+        system.debug('modelId:::::'+modelId);
+        List<AI_Model_Configuration__mdt> configs =
+            [SELECT DeveloperName, Model_Id__c, ModelName__c, Provider__c,
+             API_Endpoint__c, Max_Tokens__c, Is_Active__c, Capabilities__c,Model_Provider__c
+             FROM AI_Model_Configuration__mdt
+             WHERE DeveloperName = :modelId LIMIT 1];
+        
+        return configs.isEmpty() ? null : configs[0];
+    }
+    
+    private static String getEinsteinAccessToken() {
+        return 'temp_einstein_access_token';
+    }
+    
+    //======================================================
+    // CUSTOM EXCEPTION
+    //======================================================
+    public class AIProcessingException extends Exception {}
 }

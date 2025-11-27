@@ -1,0 +1,81 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 11-24-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+
+    <!-- Custom Buttons -->
+    <div class="button-container">
+
+        <lightning-button 
+            label="Template Manager"
+            variant={templateManagerVariant}
+            onclick={showTemplateManagerSection}>
+        </lightning-button>
+
+        <lightning-button 
+            label="Document Generator"
+            variant={generatorVariant}
+            onclick={showGeneratorSection}>
+        </lightning-button>
+
+        <lightning-button 
+            label="Document Viewer"
+            variant={viewerVariant}
+            onclick={showViewerSection}>
+        </lightning-button>
+
+        <lightning-button 
+            label="Signature Pad"
+            variant={signatureVariant}
+            onclick={showSignatureSection}>
+        </lightning-button>
+
+        <!-- NEW BUTTON -->
+        <lightning-button 
+            label="AI Model Admin"
+            variant={aiAdminVariant}
+            onclick={showAiAdminSection}>
+        </lightning-button>
+
+    </div>
+
+    <br/>
+
+    <!-- Show Components -->
+
+    <template if:true={showTemplateManager}>
+        <lightning-card title="Template Manager">
+            <c-template-manager></c-template-manager>
+        </lightning-card>
+    </template>
+
+    <template if:true={showGenerator}>
+        <lightning-card title="Document Generator">
+            <c-document-generator></c-document-generator>
+        </lightning-card>
+    </template>
+
+    <template if:true={showViewer}>
+        <lightning-card title="Document Viewer">
+            <c-document-viewer></c-document-viewer>
+        </lightning-card>
+    </template>
+
+    <template if:true={showSignature}>
+        <lightning-card title="Signature Pad">
+            <c-signature-pad></c-signature-pad>
+        </lightning-card>
+    </template>
+
+    <!-- NEW COMPONENT AREA -->
+    <template if:true={showAiAdmin}>
+        <lightning-card title="AI Model Admin">
+            <c-ai-model-admin-config></c-ai-model-admin-config>
+        </lightning-card>
+    </template>
+
+</template>
