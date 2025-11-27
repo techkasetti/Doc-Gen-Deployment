@@ -6,9 +6,11 @@ export default class ParentDocumentWorkspace extends LightningElement {
     showGenerator = false;
     showViewer = false;
     showSignature = false;
-    showAiAdmin = false; // NEW FLAG
+    showAiAdmin = false;
+    showAiConfig = false;
 
-    // Button highlight logic
+    // ================= BUTTON VARIANTS =================
+
     get templateManagerVariant() {
         return this.showTemplateManager ? "brand" : "neutral";
     }
@@ -25,21 +27,27 @@ export default class ParentDocumentWorkspace extends LightningElement {
         return this.showSignature ? "brand" : "neutral";
     }
 
-    // NEW BUTTON VARIANT
     get aiAdminVariant() {
         return this.showAiAdmin ? "brand" : "neutral";
     }
 
-    // Reset all
+    get aiConfigVariant() {
+        return this.showAiConfig ? "brand" : "neutral";
+    }
+
+    // ================= RESET METHOD =================
+
     hideAllSections() {
         this.showTemplateManager = false;
         this.showGenerator = false;
         this.showViewer = false;
         this.showSignature = false;
-        this.showAiAdmin = false; // NEW
+        this.showAiAdmin = false;
+        this.showAiConfig = false;
     }
 
-    // Actions
+    // ================= BUTTON ACTIONS =================
+
     showTemplateManagerSection() {
         this.hideAllSections();
         this.showTemplateManager = true;
@@ -60,9 +68,13 @@ export default class ParentDocumentWorkspace extends LightningElement {
         this.showSignature = true;
     }
 
-    // NEW ACTION
     showAiAdminSection() {
         this.hideAllSections();
         this.showAiAdmin = true;
+    }
+
+    showAiConfigSection() {
+        this.hideAllSections();
+        this.showAiConfig = true;
     }
 }

@@ -8,35 +8,35 @@ import generateFinalDocument from '@salesforce/apex/DocumentGenerationController
 // AI-Related Apex Methods
 import getAvailableAIModels from '@salesforce/apex/AIModelManager.getAvailableAIModels';
 import generateClauseWithAI from '@salesforce/apex/DocumentGenerationController.generateClauseWithAI';
+
 export default class DocumentGenerator extends NavigationMixin(LightningElement) {
     @track currentStep = 'step1';
     @track isLoading = false;
     @track selectedTemplateId = '';
-    @track jsonData = '{\n  "contact": {\n    "Name": "John Doe",\n    "IsUSCitizen": true\n  }\n}';
+    @track jsonData = '{\n "contact": {\n "Name": "John Doe",\n "IsUSCitizen": true\n }\n}';
     @track templateOptions = [];
     @track previewHtml = '';
     @track validationErrors = [];
+
     // AI Model properties
     @track aiModelOptions = [];
     @track selectedAIModelId = '';
     @track aiPrompt = 'Suggest a standard confidentiality clause.';
     @track generatedClause = '';
     @track isGeneratingClause = false;
+
     // NEW: AI Feature Toggle
     @track aiFeaturesEnabled = false; // Default to off
+
     // State for success screen
     @track generationComplete = false;
     @track newRecordId = '';
     @track newContentDocumentId = '';
-    get isStep1() {
-        return this.currentStep === 'step1';
-    }
-    get isStep2() {
-        return this.currentStep === 'step2';
-    }
-    get hasValidationErrors() {
-        return this.validationErrors.length > 0;
-    }
+
+    get isStep1() { return this.currentStep === 'step1'; }
+    get isStep2() { return this.currentStep === 'step2'; }
+    get hasValidationErrors() { return this.validationErrors.length > 0; }
+
     // Wire to get document templates
     @wire(getActiveTemplatesForSelection)
     wiredTemplates({ error, data }) {
@@ -49,6 +49,7 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             this.showToast('Error', 'Failed to load templates.', 'error');
         }
     }
+
     // Wire to get available AI models
     @wire(getAvailableAIModels)
     wiredAIModels({ error, data }) {
@@ -61,13 +62,16 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             this.showToast('Error', 'Failed to load AI models.', 'error');
         }
     }
+
     // --- Event Handlers for Step 1 ---
     handleTemplateChange(event) {
         this.selectedTemplateId = event.detail.value;
     }
+
     handleJsonChange(event) {
         this.jsonData = event.target.value;
     }
+
     // NEW: Handler for the AI feature toggle
     handleAIToggle(event) {
         this.aiFeaturesEnabled = event.detail.checked;
@@ -76,12 +80,15 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             this.generatedClause = '';
         }
     }
+
     handleAIModelChange(event) {
         this.selectedAIModelId = event.detail.value;
     }
+
     handleAIPromptChange(event) {
         this.aiPrompt = event.target.value;
     }
+
     async handleSuggestClauseClick() {
         if (!this.selectedAIModelId) {
             this.showToast('Warning', 'Please select an AI model first.', 'warning');
@@ -102,12 +109,14 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             this.isGeneratingClause = false;
         }
     }
+
     // --- Navigation and Core Logic ---
     handleBackClick() {
         this.currentStep = 'step1';
         this.previewHtml = '';
         this.validationErrors = [];
     }
+
     async handlePreviewClick() {
         if (!this.selectedTemplateId || !this.jsonData) {
             this.showToast('Warning', 'Please select a template and provide JSON data.', 'warning');
@@ -138,6 +147,7 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             this.isLoading = false;
         }
     }
+
     async handleGenerateClick() {
         this.isLoading = true;
         try {
@@ -163,6 +173,7 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             this.isLoading = false;
         }
     }
+
     // --- Success Screen Handlers ---
     handleViewDocument() {
         this[NavigationMixin.Navigate]({
@@ -175,14 +186,17 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             }
         });
     }
+
     handleDownloadDocument() {
         const downloadUrl = `/sfc/servlet.shepherd/document/download/${this.newContentDocumentId}`;
         window.open(downloadUrl, '_blank');
     }
+
     handleGenerateNew() {
         this.resetComponent();
         this.showToast('Ready', 'You can now generate a new document.', 'success');
     }
+
     // --- Utility Methods ---
     resetComponent() {
         this.currentStep = 'step1';
@@ -193,12 +207,14 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
         this.generationComplete = false;
         this.newRecordId = '';
         this.newContentDocumentId = '';
+
         // Reset AI fields
         this.aiFeaturesEnabled = false; // Turn toggle off
         this.selectedAIModelId = '';
         this.generatedClause = '';
         this.aiPrompt = 'Suggest a standard confidentiality clause.';
     }
+
     showToast(title, message, variant) {
         this.dispatchEvent(
             new ShowToastEvent({

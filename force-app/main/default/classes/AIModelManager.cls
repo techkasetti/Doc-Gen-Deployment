@@ -56,7 +56,7 @@ public with sharing class AIModelManager {
                 ) {
                     models.add(new AIModelConfig(config));
                 }
-               
+            
             // Add hardcoded Einstein models
             models.add(new AIModelConfig('Einstein Intent Detection',
                                          'einstein_intent',
