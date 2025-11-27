@@ -4,7 +4,7 @@ import listTemplates from '@salesforce/apex/TemplateService.listTemplates';
 
 export default class TemplateEditor extends LightningElement {
   @track name = '';
-  @track format = 'HTML';
+  @track format = 'HTML'; 
   @track content = '';
   @track previewHtml = '';
 
