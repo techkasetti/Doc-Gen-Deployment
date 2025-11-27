@@ -8,20 +8,27 @@
 <template>
     <lightning-card title="AI Model Management" icon-name="standard:settings">
         <div class="slds-p-around_medium">
-            <template if:true={models.data}>
+            <!-- Show spinner ONLY when loading -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Show datatable when NOT loading and there is data -->
+            <template if:false={isLoading}>
                 <lightning-datatable
                     key-field="developerName"
-                    data={models.data}
+                    data={tableData}
                     columns={columns}
                     onrowaction={handleRowAction}
                     hide-checkbox-column>
                 </lightning-datatable>
             </template>
-            <template if:true={models.error}>
-                <p>Error loading models: {models.error}</p>
-            </template>
-            <template if:false={models.data}>
-                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+
+            <!-- Show error message if an error exists -->
+            <template if:true={error}>
+                <div class="slds-text-color_error slds-m-top_medium">
+                    Error loading models: {error.body.message}
+                </div>
             </template>
         </div>
     </lightning-card>
