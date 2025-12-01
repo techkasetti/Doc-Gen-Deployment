@@ -1,37 +1,28 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import getAllAIModels from '@salesforce/apex/AIModelAdminController.getAllAIModels';
-import testModelConnection from '@salesforce/apex/AIModelAdminController.testModelConnection';
+import getModels from '@salesforce/apex/AIModelAdminController.getModels';
+import saveModel from '@salesforce/apex/AIModelAdminController.saveModel';
 import updateModelStatus from '@salesforce/apex/AIModelAdminController.updateModelStatus';
 import deleteModel from '@salesforce/apex/AIModelAdminController.deleteModel';
+import testModelConnection from '@salesforce/apex/AIModelAdminController.testModelConnection';
 
-// --- Constants for cleaner code ---
 const TOAST_VARIANTS = { SUCCESS: 'success', WARNING: 'warning', ERROR: 'error', INFO: 'info' };
-const TEST_MESSAGES = {
-    TESTING: 'Testing connection, please wait...',
-    SUCCESS_PREFIX: 'SUCCESS:',
-    ERROR_PREFIX: 'ERROR:'
-};
+const TEST_MESSAGES = { TESTING: 'Testing connection, please wait...', SUCCESS_PREFIX: 'SUCCESS:', ERROR_PREFIX: 'ERROR:' };
 
+// **CORRECTION**: Updated fieldName to match the clean wrapper properties from Apex
 const COLUMNS = [
-    { label: 'Model Name', fieldName: 'Label', type: 'text', sortable: true },
-    { label: 'Provider', fieldName: 'Model_Provider__c', type: 'text', sortable: true },
+    { label: 'Model Name', fieldName: 'Name', type: 'text', sortable: true },
+    { label: 'Provider', fieldName: 'Model_Provider', type: 'text', sortable: true },
     { label: 'Status', fieldName: 'statusLabel', type: 'text', sortable: true, cellAttributes: { class: { fieldName: 'statusClass' }, iconName: { fieldName: 'statusIcon' }, iconPosition: 'left' } },
-    { label: 'Context Window', fieldName: 'Context_Window_Size__c', type: 'number', sortable: true },
-    { label: 'Cost per Token', fieldName: 'Cost_Per_Token__c', type: 'currency', typeAttributes: { currencyCode: 'USD' } },
-    {
-        type: 'action',
-        typeAttributes: {
-            rowActions: [
-                { label: 'Toggle Active/Inactive', name: 'toggle' },
-                { label: 'Test', name: 'test' },
-                { label: 'View Details', name: 'view' },
-                { label: 'Edit', name: 'edit' },
-                { label: 'Delete', name: 'delete' }
-            ]
-        }
-    }
+    { label: 'Context Window', fieldName: 'Context_Window_Size', type: 'number', sortable: true },
+    { label: 'Cost per Token', fieldName: 'Cost_Per_Token', type: 'currency', typeAttributes: { currencyCode: 'USD', minimumFractionDigits: '6' } },
+    { type: 'action', typeAttributes: { rowActions: [
+        { label: 'Toggle Active/Inactive', name: 'toggle' },
+        { label: 'Test', name: 'test' },
+        { label: 'Edit', name: 'edit' },
+        { label: 'Delete', name: 'delete' }
+    ]}}
 ];
 
 const DEFAULT_TEST_PROMPT = 'Hello, please respond with a simple greeting to confirm connectivity.';
@@ -48,9 +39,14 @@ export default class AiModelAdminConfig extends LightningElement {
     @track showTestHistory = false;
     @track showHelp = false;
     @track isTestRunning = false;
-    @track sortedBy = 'Label';
+    @track sortedBy = 'Name';
     @track sortedDirection = 'asc';
     @track lastUpdated = '';
+
+    // --- Modal State ---
+    @track showModal = false;
+    @track modalTitle = '';
+    @track currentModel = {};
 
     // --- Configuration ---
     columns = COLUMNS;
@@ -59,16 +55,14 @@ export default class AiModelAdminConfig extends LightningElement {
     // --- Component lifecycle ---
     connectedCallback() {
         this.updateLastUpdatedTime();
-        this.loadTestHistory();
     }
 
     // --- Wire method for loading AI models ---
-    @wire(getAllAIModels)
+    @wire(getModels)
     wiredModels(result) {
         this.wiredModelsResult = result;
         if (result.data) {
-            this.aiModels = result.data;
-            this.processModelData();
+            this.processModelData(result.data);
             this.updateLastUpdatedTime();
         } else if (result.error) {
             this.handleError('Failed to load AI models', result.error);
@@ -76,30 +70,26 @@ export default class AiModelAdminConfig extends LightningElement {
     }
 
     // --- Data processing and computed properties ---
-    processModelData() {
-        this.aiModels = this.aiModels.map(model => ({
+    processModelData(data) {
+        // **CORRECTION**: Use the clean 'Is_Active' property from the wrapper
+        this.aiModels = data.map(model => ({
             ...model,
-            id: model.DeveloperName,
-            statusLabel: model.Is_Active__c ? 'Active' : 'Inactive',
-            statusClass: model.Is_Active__c ? 'slds-text-color_success' : 'slds-text-color_error',
-            statusIcon: model.Is_Active__c ? 'utility:success' : 'utility:error'
+            statusLabel: model.Is_Active ? 'Active' : 'Inactive',
+            statusClass: model.Is_Active ? 'slds-text-color_success' : 'slds-text-color_error',
+            statusIcon: model.Is_Active ? 'utility:success' : 'utility:error'
         }));
-        
         this.showTestSection = this.aiModels.length > 0;
         this.showHelp = this.aiModels.length === 0;
     }
 
     // --- Getters for template binding ---
-    get modelCountText() {
-        return this.aiModels.length === 1 ? 'model' : 'models';
-    }
-
     get modelTestOptions() {
+        // **CORRECTION**: Use clean property names from the wrapper
         return this.aiModels
-            .filter(model => model.Is_Active__c)
+            .filter(model => model.Is_Active)
             .map(model => ({
-                label: `${model.Label} (${model.Model_Provider__c})`,
-                value: model.DeveloperName
+                label: `${model.Name} (${model.Model_Provider})`,
+                value: model.DeveloperName // Use clean DeveloperName for testing
             }));
     }
 
@@ -111,44 +101,59 @@ export default class AiModelAdminConfig extends LightningElement {
         const baseClass = 'slds-box slds-box_small slds-m-top_medium ';
         if (this.testResult.includes(TEST_MESSAGES.SUCCESS_PREFIX)) {
             return baseClass + 'slds-theme_success';
-        } else if (this.testResult.includes(TEST_MESSAGES.ERROR_PREFIX)) {
+        }
+        if (this.testResult.includes(TEST_MESSAGES.ERROR_PREFIX)) {
             return baseClass + 'slds-theme_error';
         }
         return baseClass + 'slds-theme_info';
     }
 
     get testResultIcon() {
-        if (this.testResult.includes(TEST_MESSAGES.SUCCESS_PREFIX)) {
-            return 'utility:success';
-        } else if (this.testResult.includes(TEST_MESSAGES.ERROR_PREFIX)) {
-            return 'utility:error';
-        }
+        if (this.testResult.includes(TEST_MESSAGES.SUCCESS_PREFIX)) { return 'utility:success'; }
+        if (this.testResult.includes(TEST_MESSAGES.ERROR_PREFIX)) { return 'utility:error'; }
         return 'utility:info';
     }
 
-    get testResultIconVariant() {
-        return 'inverse';
-    }
-
     get testResultTitle() {
-        if (this.testResult.includes(TEST_MESSAGES.SUCCESS_PREFIX)) {
-            return 'Connection Successful';
-        } else if (this.testResult.includes(TEST_MESSAGES.ERROR_PREFIX)) {
-            return 'Connection Failed';
-        }
+        if (this.testResult.includes(TEST_MESSAGES.SUCCESS_PREFIX)) { return 'Connection Successful'; }
+        if (this.testResult.includes(TEST_MESSAGES.ERROR_PREFIX)) { return 'Connection Failed'; }
         return 'Test Information';
     }
 
+    // --- Modal Handlers ---
+    handleAddModel() {
+        this.modalTitle = 'Add New AI Model';
+        this.currentModel = { Is_Active: true }; // Default new models to active
+        this.showModal = true;
+    }
+
+    handleCloseModal() {
+        this.showModal = false;
+        this.currentModel = {};
+    }
+
+    handleFieldChange(event) {
+        // This now works directly with clean property names from data-id
+        const field = event.target.dataset.id;
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+        this.currentModel = { ...this.currentModel, [field]: value };
+    }
+
+    async handleSave() {
+        try {
+            // The currentModel object now has clean keys, matching the Apex DTO
+            await saveModel({ jsonModel: JSON.stringify(this.currentModel) });
+            this.showToast('Success', 'Model configuration saved successfully.', TOAST_VARIANTS.SUCCESS);
+            this.handleCloseModal();
+            return refreshApex(this.wiredModelsResult);
+        } catch (error) {
+            this.handleError('Save Failed', error);
+        }
+    }
+
     // --- Event handlers ---
-    handleTestModelSelection(event) {
-        this.selectedTestModel = event.detail.value;
-        this.clearTestResults();
-    }
-
-    handleTestPromptChange(event) {
-        this.testPrompt = event.detail.value;
-    }
-
+    handleTestModelSelection(event) { this.selectedTestModel = event.detail.value; }
+    handleTestPromptChange(event) { this.testPrompt = event.detail.value; }
     handleSort(event) {
         this.sortedBy = event.detail.fieldName;
         this.sortedDirection = event.detail.sortDirection;
@@ -167,44 +172,14 @@ export default class AiModelAdminConfig extends LightningElement {
 
     // --- Test connection functionality ---
     async handleTestConnection() {
-        if (!this.selectedTestModel || !this.testPrompt?.trim()) {
-            this.showToast('Warning', 'Please select a model and enter a test prompt', TOAST_VARIANTS.WARNING);
-            return;
-        }
-
-        const startTime = Date.now();
         this.isTestRunning = true;
         this.testResult = TEST_MESSAGES.TESTING;
-        this.testMetrics = null;
-
         try {
-            const result = await testModelConnection({
-                modelId: this.selectedTestModel,
-                testPrompt: this.testPrompt.trim()
-            });
-            
-            const endTime = Date.now();
-            const responseTime = endTime - startTime;
-            
+            const result = await testModelConnection({ modelId: this.selectedTestModel, testPrompt: this.testPrompt });
             this.testResult = result;
-            this.testMetrics = {
-                responseTime: responseTime,
-                status: result.includes(TEST_MESSAGES.SUCCESS_PREFIX) ? 'Success' : 'Failed',
-                version: this.getModelVersion(this.selectedTestModel),
-                timestamp: new Date().toLocaleString()
-            };
-            
-            this.addToTestHistory(this.selectedTestModel, result, responseTime);
-            
         } catch (error) {
-            this.testResult = `${TEST_MESSAGES.ERROR_PREFIX}: ${this.extractErrorMessage(error)}`;
-            this.testMetrics = {
-                responseTime: Date.now() - startTime,
-                status: 'Error',
-                version: 'Unknown',
-                timestamp: new Date().toLocaleString()
-            };
             this.handleError('Connection test failed', error);
+            this.testResult = `${TEST_MESSAGES.ERROR_PREFIX}: ${this.extractErrorMessage(error)}`;
         } finally {
             this.isTestRunning = false;
         }
@@ -215,72 +190,48 @@ export default class AiModelAdminConfig extends LightningElement {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
-        try {
-            switch (actionName) {
-                case 'toggle':
-                    await this.toggleModelStatus(row);
-                    break;
-                case 'test':
-                    this.selectedTestModel = row.DeveloperName;
-                    await this.handleTestConnection();
-                    break;
-                case 'view':
-                    this.viewModelDetails(row);
-                    break;
-                case 'edit':
-                    this.editModel(row);
-                    break;
-                case 'delete':
-                    await this.deleteModel(row);
-                    break;
-                default:
-                    console.warn('Unknown action:', actionName);
-            }
-        } catch (error) {
-            this.handleError(`Failed to execute action: ${actionName}`, error);
+        switch (actionName) {
+            case 'toggle':
+                await this.toggleModelStatus(row);
+                break;
+            case 'test':
+                // **CORRECTION**: Use clean DeveloperName
+                this.selectedTestModel = row.DeveloperName;
+                await this.handleTestConnection();
+                break;
+            case 'edit':
+                this.modalTitle = `Edit ${row.Name}`;
+                // The 'row' object already has clean properties, so this works perfectly
+                this.currentModel = JSON.parse(JSON.stringify(row));
+                this.showModal = true;
+                break;
+            case 'delete':
+                // eslint-disable-next-line no-alert
+                if (confirm(`Are you sure you want to delete "${row.Name}"? This action cannot be undone.`)) {
+                    await this.deleteRecord(row.recordId);
+                }
+                break;
+            default:
         }
     }
 
-    // --- Model management methods ---
+    // --- Model management DML methods ---
     async toggleModelStatus(model) {
-        const newStatus = !model.Is_Active__c;
-        await this.updateModelStatus(model.DeveloperName, newStatus);
-    }
-
-    async updateModelStatus(modelId, isActive) {
+        // **CORRECTION**: Use clean 'Is_Active' property
+        const newStatus = !model.Is_Active;
         try {
-            await updateModelStatus({ modelId, isActive });
-            this.showToast(
-                'Success',
-                `Model ${isActive ? 'activated' : 'deactivated'} successfully`,
-                TOAST_VARIANTS.SUCCESS
-            );
+            await updateModelStatus({ recordId: model.recordId, isActive: newStatus });
+            this.showToast('Success', `Model ${newStatus ? 'activated' : 'deactivated'} successfully`, TOAST_VARIANTS.SUCCESS);
             await refreshApex(this.wiredModelsResult);
-            this.updateLastUpdatedTime();
         } catch (error) {
             this.handleError('Failed to update model status', error);
         }
     }
-    
-    viewModelDetails(model) {
-        // Placeholder for viewing details in a modal
-        console.log('Viewing details for:', model);
-        this.showToast('Info', `Viewing details for ${model.Label}`, TOAST_VARIANTS.INFO);
-    }
-    
-    editModel(model) {
-        // Placeholder for opening an edit modal
-        console.log('Editing model:', model);
-        this.showToast('Info', `Edit functionality for ${model.Label} would open here`, TOAST_VARIANTS.INFO);
-    }
 
-    async deleteModel(model) {
-        // Placeholder for deleting with confirmation
-        console.log('Deleting model:', model);
-        // In a real app, show a confirmation modal before calling Apex
+    async deleteRecord(recordId) {
         try {
-            await deleteModel({ modelId: model.DeveloperName });
-            this.showToast('Success', `Model ${model.Label} deleted successfully`, TOAST_VARIANTS.SUCCESS);
+            await deleteModel({ recordId: recordId });
+            this.showToast('Success', 'Model deleted successfully.', TOAST_VARIANTS.SUCCESS);
             await refreshApex(this.wiredModelsResult);
         } catch(error) {
             this.handleError('Failed to delete model', error);
@@ -288,65 +239,18 @@ export default class AiModelAdminConfig extends LightningElement {
     }
 
     // --- Utility methods ---
-    clearTestResults() {
-        this.testResult = '';
-        this.testMetrics = null;
-    }
-
-    updateLastUpdatedTime() {
-        this.lastUpdated = new Date().toLocaleString();
-    }
-
-    getModelVersion(modelId) {
-        // Placeholder to get a version - you could add this to your metadata
-        const model = this.aiModels.find(m => m.DeveloperName === modelId);
-        return model?.Version__c || 'v1.0';
-    }
-
-    addToTestHistory(modelId, result, responseTime) {
-        const model = this.aiModels.find(m => m.DeveloperName === modelId);
-        const historyEntry = {
-            id: Date.now().toString(),
-            modelName: model?.Label || modelId,
-            status: result.includes(TEST_MESSAGES.SUCCESS_PREFIX) ? 'Success' : 'Failed',
-            statusClass: result.includes(TEST_MESSAGES.SUCCESS_PREFIX) ? 
-                'slds-text-color_success' : 'slds-text-color_error',
-            responseTime: responseTime,
-            timestamp: new Date().toLocaleTimeString()
-        };
-        
-        this.testHistory = [historyEntry, ...this.testHistory.slice(0, 9)]; // Keep last 10 entries
-        this.showTestHistory = this.testHistory.length > 0;
-    }
-
-    loadTestHistory() {
-        // You could enhance this to load history from localStorage
-        this.testHistory = [];
-        this.showTestHistory = false;
-    }
-
+    updateLastUpdatedTime() { this.lastUpdated = new Date().toLocaleString(); }
     extractErrorMessage(error) {
-        if (error?.body?.message) {
-            return error.body.message;
-        }
-        if (error?.message) {
-            return error.message;
-        }
+        if (error?.body?.message) return error.body.message;
+        if (error?.message) return error.message;
         return 'An unknown error occurred';
     }
-
     handleError(title, error) {
-        console.error(title, error);
+        console.error(title, JSON.stringify(error));
         const message = this.extractErrorMessage(error);
         this.showToast(title, message, TOAST_VARIANTS.ERROR);
     }
-    
     showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({
-            title,
-            message,
-            variant,
-            mode: variant === TOAST_VARIANTS.ERROR ? 'sticky' : 'dismissable'
-        }));
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode: variant === TOAST_VARIANTS.ERROR ? 'sticky' : 'dismissable' }));
     }
 }
