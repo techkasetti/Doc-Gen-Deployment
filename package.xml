@@ -12,7 +12,26 @@
         <members>AIInsight__c</members>
         <members>WorkflowConfiguration__c</members>
         <members>RetentionPolicy__c</members>
-    `        
+        <members>Clause__c</members>
+        <members>DocumentApproval__c</members>
+        <members>Template__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>AI_Model_Configuration__mdt</members>
+        <members>ComplianceRule__mdt</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>AIModelManager</members>
+        <members>ClauseGenerator</members>
+        <members>ComplianceChecker</members>
+        <members>DocumentAssemblyEngine</members>
+        <members>DocumentGenerationController</members>
+        <members>SignatureRequestController</members>
+        <members>TemplateService</members>
+        <members>ValidationService</members>
+        <name>ApexClass</name>
     </types>
     <types>
         <members>DocumentGenerationAdmin</members>
@@ -20,8 +39,16 @@
         <name>PermissionSet</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexClass</name>
+        <members>aiModelAdmin</members>
+        <members>aiModelAdminConfig</members>
+        <members>documentGenerator</members>
+        <members>documentSuite</members>
+        <members>documentViewer</members>
+        <members>parentDocumentWorkspace</members>
+        <members>signaturePad</members>
+        <members>templateEditor</members>
+        <members>templateManager</members>
+        <name>LightningComponentBundle</name>
     </types>
     <types>
         <members>*</members>
@@ -30,10 +57,6 @@
     <types>
         <members>*</members>
         <name>AuraDefinitionBundle</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>LightningComponentBundle</name>
     </types>
     <version>60.0</version>
 </Package>
