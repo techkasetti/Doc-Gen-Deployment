@@ -5,7 +5,7 @@
 * @author        Anara AI
 * @version       3.1
 * @last modified 11-25-2025
-*/     
+*/
 
 public with sharing class AIModelManager {
     

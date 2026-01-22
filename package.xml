@@ -1,62 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Custom Objects - Core Business Objects -->
     <types>
+        <!-- Document & Template Objects -->
         <members>DocumentLifecycleConfiguration__c</members>
-        <members>ContractSchema__c</members>
+        <members>DocumentTemplate__c</members>
+        <members>Template__c</members>
+        
+        <!-- Signature & Request Objects -->
         <members>Signature_Request__c</members>
+        <members>SignatureValidation__c</members>
+        
+        <!-- Clause & Compliance Objects -->
+        <members>Clause__c</members>
         <members>ClauseLibrary__c</members>
         <members>ComplianceRule__c</members>
-        <members>DocumentTemplate__c</members>
-        <members>SignatureValidation__c</members>
+        
+        <!-- Document Processing Objects -->
+        <members>DocumentApproval__c</members>
+        <members>ContractSchema__c</members>
+        
+        <!-- Audit & Monitoring Objects -->
         <members>AuditTrail__c</members>
         <members>AIInsight__c</members>
+        
+        <!-- Configuration Objects -->
         <members>WorkflowConfiguration__c</members>
         <members>RetentionPolicy__c</members>
-        <members>Clause__c</members>
-        <members>DocumentApproval__c</members>
-        <members>Template__c</members>
         <name>CustomObject</name>
     </types>
+
+    <!-- Custom Metadata Types -->
     <types>
         <members>AI_Model_Configuration__mdt</members>
         <members>ComplianceRule__mdt</members>
         <name>CustomMetadata</name>
     </types>
+
+    <!-- Apex Classes - Core Business Logic -->
     <types>
+        <!-- Document Generation & Assembly -->
+        <members>DocumentGenerationController</members>
+        <members>DocumentAssemblyEngine</members>
+        <members>TemplateService</members>
+        
+        <!-- AI & Compliance -->
         <members>AIModelManager</members>
         <members>ClauseGenerator</members>
         <members>ComplianceChecker</members>
-        <members>DocumentAssemblyEngine</members>
-        <members>DocumentGenerationController</members>
-        <members>SignatureRequestController</members>
-        <members>TemplateService</members>
         <members>ValidationService</members>
+        
+        <!-- Signature Processing -->
+        <members>SignatureRequestController</members>
         <name>ApexClass</name>
     </types>
+
+    <!-- Permission Sets -->
     <types>
         <members>DocumentGenerationAdmin</members>
         <members>DocumentGenerationUser</members>
         <name>PermissionSet</name>
     </types>
+
+    <!-- Lightning Web Components -->
     <types>
-        <members>aiModelAdmin</members>
-        <members>aiModelAdminConfig</members>
+        <!-- Core Document Generation Components -->
         <members>documentGenerator</members>
         <members>documentSuite</members>
-        <members>documentViewer</members>
         <members>parentDocumentWorkspace</members>
-        <members>signaturePad</members>
-        <members>templateEditor</members>
+        
+        <!-- Template Management Components -->
         <members>templateManager</members>
+        <members>templateEditor</members>
+        
+        <!-- Document Viewing & Signing Components -->
+        <members>documentViewer</members>
+        <members>signaturePad</members>
+        
+        <!-- AI Model Components -->
+        <members>aiModelAdmin</members>
+        <members>aiModelAdminConfig</members>
         <name>LightningComponentBundle</name>
     </types>
+
+    <!-- Apex Triggers - All triggers -->
     <types>
         <members>*</members>
         <name>ApexTrigger</name>
     </types>
-    <types>
+
+    <!-- Aura Components -->
+    <!-- <types>
         <members>*</members>
         <name>AuraDefinitionBundle</name>
-    </types>
+    </types> -->
+
+    <!-- Salesforce API Version -->
     <version>60.0</version>
 </Package>
