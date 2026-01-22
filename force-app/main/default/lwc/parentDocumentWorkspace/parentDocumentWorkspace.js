@@ -8,6 +8,7 @@ export default class ParentDocumentWorkspace extends LightningElement {
     showSignature = false;
     showAiAdmin = false;
     showAiConfig = false;
+    showApprovalConsole = false;
 
     // ================= BUTTON VARIANTS =================
 
@@ -35,6 +36,10 @@ export default class ParentDocumentWorkspace extends LightningElement {
         return this.showAiConfig ? "brand" : "neutral";
     }
 
+    get approvalConsoleVariant() {
+        return this.showApprovalConsole ? "brand" : "neutral";
+    }
+
     // ================= RESET METHOD =================
 
     hideAllSections() {
@@ -44,6 +49,7 @@ export default class ParentDocumentWorkspace extends LightningElement {
         this.showSignature = false;
         this.showAiAdmin = false;
         this.showAiConfig = false;
+        this.showApprovalConsole = false;
     }
 
     // ================= BUTTON ACTIONS =================
@@ -76,5 +82,10 @@ export default class ParentDocumentWorkspace extends LightningElement {
     showAiConfigSection() {
         this.hideAllSections();
         this.showAiConfig = true;
+    }
+
+    showApprovalConsoleSection() {
+        this.hideAllSections();
+        this.showApprovalConsole = true;
     }
 }

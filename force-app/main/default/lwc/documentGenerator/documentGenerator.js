@@ -13,7 +13,7 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
     @track currentStep = 'step1';
     @track isLoading = false;
     @track selectedTemplateId = '';
-    @track jsonData = '{\n "contact": {\n "Name": "John Doe",\n "IsUSCitizen": true\n }\n}';
+    @track jsonData = `{ "contact": { "Name": "Jane Doe", "Title": "Senior Software Engineer", "Email": "jane.doe@example.com", "IsUSCitizen": true, "Address": { "Street": "123 Innovation Drive", "City": "San Francisco", "State": "CA", "PostalCode": "94105", "Country": "USA" } }, "company": { "Name": "Tech Innovations Inc.", "Address": { "Street": "456 Market Street", "City": "San Francisco", "State": "CA", "PostalCode": "94105", "Country": "USA" }, "Website": "www.techinnovations.com" }, "agreement": { "DocumentType": "Employment Agreement", "Region": "US", "Role": "Employee", "EffectiveDate": "2025-12-04", "Version": "1.0", "ConfidentialityPeriod": "5 years" }}`;
     @track templateOptions = [];
     @track previewHtml = '';
     @track validationErrors = [];
@@ -32,6 +32,8 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
     @track generationComplete = false;
     @track newRecordId = '';
     @track newContentDocumentId = '';
+@track generatedDateTime;
+
 
     get isStep1() { return this.currentStep === 'step1'; }
     get isStep2() { return this.currentStep === 'step2'; }
@@ -116,8 +118,22 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
         this.previewHtml = '';
         this.validationErrors = [];
     }
+    
 
     async handlePreviewClick() {
+
+        // for document time view
+        this.generatedDateTime = new Date().toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+});
+
+//end
+
         if (!this.selectedTemplateId || !this.jsonData) {
             this.showToast('Warning', 'Please select a template and provide JSON data.', 'warning');
             return;
@@ -129,9 +145,12 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
             const result = await previewDocument({
                 templateId: this.selectedTemplateId,
                 jsonData: this.jsonData,
-                aiClauseText: clauseToSend
+                aiClauseText: clauseToSend,
+                generatedDateTime: this.getClientDateTime()
+              
             });
             if (result.success) {
+                console.log('Preview Result:', result);
                 this.previewHtml = result.renderedContent;
                 this.validationErrors = [];
                 this.currentStep = 'step2';
@@ -157,7 +176,9 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
                 templateId: this.selectedTemplateId,
                 jsonData: this.jsonData,
                 aiClauseText: clauseToSend,
-                selectedAIModel: this.selectedAIModelId
+                selectedAIModel: this.selectedAIModelId,
+                generatedDateTime: this.generatedDateTime
+                
             });
             if (result.success && result.recordId) {
                 this.showToast('Success', 'Document generated successfully!', 'success');
@@ -214,6 +235,21 @@ export default class DocumentGenerator extends NavigationMixin(LightningElement)
         this.generatedClause = '';
         this.aiPrompt = 'Suggest a standard confidentiality clause.';
     }
+
+// document time set
+getClientDateTime() {
+    const now = new Date();
+
+    return now.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
 
     showToast(title, message, variant) {
         this.dispatchEvent(

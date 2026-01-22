@@ -46,6 +46,12 @@
             onclick={showAiConfigSection}>
         </lightning-button>
 
+        <lightning-button 
+            label="Approval Console"
+            variant={approvalConsoleVariant}
+            onclick={showApprovalConsoleSection}>
+        </lightning-button>
+
     </div>
 
     <br/>
@@ -87,6 +93,13 @@
     <template if:true={showAiConfig}>
         <lightning-card title="AI Model Configuration">
             <c-ai-model-admin-config></c-ai-model-admin-config>
+        </lightning-card>
+    </template>
+
+    <!-- ===== APPROVAL CONSOLE ===== -->
+    <template if:true={showApprovalConsole}>
+        <lightning-card title="Approval Console">
+            <c-approval-console></c-approval-console>
         </lightning-card>
     </template>
 

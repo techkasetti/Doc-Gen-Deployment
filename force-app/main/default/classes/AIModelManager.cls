@@ -140,60 +140,92 @@ public with sharing class AIModelManager {
     //======================================================
     // EINSTEIN PLATFORM SERVICES INTEGRATION
     //======================================================
-   private static String processWithEinsteinNative(
-    String prompt,
-    String context,
-    AI_Model_Configuration__mdt config
-) {
-    System.debug('prompt::::' + prompt);
-    System.debug('context:::' + context);
-    System.debug('config::::' + config);
-
-    HttpRequest req = new HttpRequest();
-    req.setEndpoint('callout:OpenAI/v1/chat/completions'); 
-    req.setMethod('POST');
-    req.setHeader('Content-Type', 'application/json');
-    // ✅ No Authorization header (Named Credential handles it)
-
-    Map<String, Object> body = new Map<String, Object>{
-        'model' => 'gpt-4o-mini',   // ✅ HARDCODED VALID MODEL
-        'messages' => new List<Object>{
-            new Map<String, Object>{
-                'role' => 'user',
-                'content' => prompt + '\n\nContext:\n' + context
-            }
+    private static String processWithEinsteinNative(
+        String prompt,
+        String context,
+        AI_Model_Configuration__mdt config
+    ) {
+        System.debug('prompt::::' + prompt);
+        System.debug('context:::' + context);
+        System.debug('config::::' + config);
+        
+        // ✅ TOGGLE MODE
+        if (config != null) {
+            System.debug('Using HARDCODED AI response');
+            // ✅ Hardcoded Employment Agreement Clause Block
+            String aiClause =
+                '1. Employment Terms\n'
+                + 'The Employee shall serve the Employer in the role of Individual Contributor and shall perform all duties assigned in accordance with company policies.\n\n'
+                
+                + '2. Compensation & Benefits\n'
+                + 'The Employee shall receive compensation and benefits as per the Employer’s standard payroll and benefit structure applicable in North America.\n\n'
+                
+                + '3. Working Hours\n'
+                + 'The Employee shall adhere to standard working hours as defined by the Employer and applicable labor laws.\n\n'
+                
+                + '4. Confidentiality\n'
+                + 'The Employee agrees to maintain strict confidentiality of all proprietary, business, and client information during and after the term of employment.\n\n'
+                
+                + '5. Intellectual Property\n'
+                + 'Any intellectual property created during employment shall be the exclusive property of the Employer.\n\n'
+                
+                + '6. Termination\n'
+                + 'Either party may terminate this Agreement by providing 30 days written notice or as per applicable law.\n\n'
+                
+                + '7. Governing Law\n'
+                + 'This Agreement shall be governed by and construed in accordance with the laws applicable in North America.\n\n'
+                
+                + '8. Entire Agreement\n'
+                + 'This document constitutes the entire agreement between the parties and supersedes all prior understandings.';
+            
+            return aiClause;
+            
         }
-    };
-
-    req.setBody(JSON.serialize(body));
-
-    Http http = new Http();
-    HttpResponse response = http.send(req);
-
-    // ✅ Debug full response
-    System.debug('STATUS CODE: ' + response.getStatusCode());
-    System.debug('RAW RESPONSE: ' + response.getBody());
-
-    if (response.getStatusCode() == 200) {
-        Map<String, Object> result =
-            (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
-
-        List<Object> choices = (List<Object>) result.get('choices');
-        Map<String, Object> firstChoice =
-            (Map<String, Object>) choices[0];
-        Map<String, Object> message =
-            (Map<String, Object>) firstChoice.get('message');
-
-        return (String) message.get('content');
+        
+        // ✅ REAL API CALL ONLY IF TOGGLE IS OFF
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('callout:OpenAI/v1/chat/completions'); 
+        req.setMethod('POST');
+        req.setHeader('Content-Type', 'application/json');
+        
+        Map<String, Object> body = new Map<String, Object>{
+            'model' => 'gpt-4o-mini',
+                'messages' => new List<Object>{
+                    new Map<String, Object>{
+                        'role' => 'user',
+                            'content' => prompt + '\n\nContext:\n' + context
+                            }
+                }
+        };
+            
+            req.setBody(JSON.serialize(body));
+        
+        Http http = new Http();
+        HttpResponse response = http.send(req);
+        
+        System.debug('STATUS CODE: ' + response.getStatusCode());
+        System.debug('RAW RESPONSE: ' + response.getBody());
+        
+        if (response.getStatusCode() == 200) {
+            Map<String, Object> result =
+                (Map<String, Object>) JSON.deserializeUntyped(response.getBody());
+            
+            List<Object> choices = (List<Object>) result.get('choices');
+            Map<String, Object> firstChoice =
+                (Map<String, Object>) choices[0];
+            Map<String, Object> message =
+                (Map<String, Object>) firstChoice.get('message');
+            
+            return (String) message.get('content');
+        }
+        
+        throw new AIProcessingException(
+            'OpenAI API failed with status ' +
+            response.getStatusCode() +
+            ' | Response: ' + response.getBody()
+        );
     }
-
-    throw new AIProcessingException(
-        'OpenAI API failed with status ' +
-        response.getStatusCode() +
-        ' | Response: ' + response.getBody()
-    );
-}
-
+    
     
     
     //======================================================
