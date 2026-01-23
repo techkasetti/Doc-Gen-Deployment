@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>AI Model Configuration</label>
+    <pluralLabel>AI Model Configurations</pluralLabel>
+    <description>Configuration for AI models used by the Document Generation system</description>
+    <visibility>Public</visibility>
+    <fields>
+        <fullName>Capabilities__c</fullName>
+        <description>AI model capabilities</description>
+        <label>Capabilities</label>
+        <required>false</required>
+        <type>TextArea</type>
+    </fields>
+    <fields>
+        <fullName>Is_Active__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Whether this AI model configuration is active</description>
+        <label>Is Active</label>
+        <required>false</required>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Model_Id__c</fullName>
+        <description>Unique identifier for the AI model</description>
+        <label>Model Id</label>
+        <required>false</required>
+        <type>Text</type>
+        <length>100</length>
+    </fields>
+    <fields>
+        <fullName>ModelName__c</fullName>
+        <description>Human-readable name of the AI model</description>
+        <label>Model Name</label>
+        <required>false</required>
+        <type>Text</type>
+        <length>255</length>
+    </fields>
+    <fields>
+        <fullName>Provider__c</fullName>
+        <description>AI service provider (e.g., Einstein, OpenAI)</description>
+        <label>Provider</label>
+        <required>false</required>
+        <type>Text</type>
+        <length>100</length>
+    </fields>
+</CustomMetadata>
